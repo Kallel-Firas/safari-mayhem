@@ -1,15 +1,13 @@
-// make the view class that draws the game by drawing a 50x50 grid of "dirt.png" images
-
 package View;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import javax.imageio.ImageIO;
 
-public class View extends JPanel {
+public class GameMap extends JPanel {
     // also load images: tree, grass, bush
     private BufferedImage treeImage;
     private BufferedImage grassImage;
@@ -24,7 +22,7 @@ public class View extends JPanel {
     private BufferedImage cheetahImage;
     private BufferedImage babyCheetahImage;
 
-    public View() {
+    public GameMap() {
         try {
             waterImage = ImageIO.read(new File("resources/water.png"));
             dirtImage = ImageIO.read(new File("resources/dirt.png"));
@@ -38,7 +36,6 @@ public class View extends JPanel {
         } catch (IOException e) {
             System.out.println("Error loading image");
         }
-        // Set the preferred size of the panel
         setPreferredSize(new Dimension(50*16, 50*16));
     }
 
