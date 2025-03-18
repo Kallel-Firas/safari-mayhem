@@ -34,7 +34,13 @@ public abstract class Animal {
     }
 
     public void setHungerChange(float hunger_change) {
-        this.hunger_change = hunger_change;
+
+        if (this.age > 2) {
+            this.hunger_change = hunger_change * 2;
+        } else {
+            this.hunger_change = hunger_change;
+        }
+
     }
 
     public float getThirstChange() {
@@ -42,7 +48,11 @@ public abstract class Animal {
     }
 
     public void setThirstChange(float thirst_change) {
-        this.thirst_change = thirst_change;
+        if (this.age > 2) {
+            this.thirst_change = thirst_change * 2;
+        } else {
+            this.thirst_change = thirst_change;
+        }
     }
 
     public int getVisionRadius() {
@@ -74,6 +84,7 @@ public abstract class Animal {
     }
 
     public void Eat() {
+        this.hunger_meter=0;
     }
 
     public void Sleep() {
@@ -83,6 +94,7 @@ public abstract class Animal {
     }
 
     public void Drink() {
+        this.thirst_meter = 0;
     }
 
     public boolean Reproduce(Animal partner) {
