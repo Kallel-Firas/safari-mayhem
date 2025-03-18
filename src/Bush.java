@@ -1,6 +1,6 @@
-public class Grass extends Land {
-    private int cost = 50;
-    private int food_left = 1;
+public class Bush extends Land {
+    private int cost = 100;
+    private int food_left = 3;
     public int getCost() {
         return cost;
     }

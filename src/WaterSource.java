@@ -1,4 +1,4 @@
-public abstract class WaterSource implements  Landscape {
+public abstract class WaterSource extends Landscape {
     private int radius;
 
     public int getRadius() {

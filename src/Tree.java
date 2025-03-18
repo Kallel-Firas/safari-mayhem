@@ -7,7 +7,7 @@ public class Tree extends Land {
         return food_left;
     }
 
-    public void setFoodLeft(int food_left) {
-        this.food_left = food_left;
+    public void setFoodLeft(int food_left,int change) {
+        this.food_left = food_left+change;
     }
 }

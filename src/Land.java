@@ -1,2 +1,2 @@
-public abstract class Land implements Landscape{
+public abstract class Land extends Landscape{
 }
