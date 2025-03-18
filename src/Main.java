@@ -1,3 +1,5 @@
+import Model.Animal;
+
 import java.util.List;
 
 public class Main {

@@ -6,7 +6,7 @@ public class Game {
     public static void main(String[] args) {
         WelcomeScreen welcomeScreen = new WelcomeScreen();
         /*
-        JFrame frame = new JFrame("Safari Mayhem");
+        JFrame frame = new JFrame("Model.Safari Mayhem");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         View view = new View();
         frame.add(view);

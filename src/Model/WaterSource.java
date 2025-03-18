@@ -1,0 +1,13 @@
+package Model;
+
+public abstract class WaterSource extends Landscape {
+    private int radius;
+
+    public int getRadius() {
+        return radius;
+    }
+
+    public void setRadius(int radius) {
+        this.radius = radius;
+    }
+}

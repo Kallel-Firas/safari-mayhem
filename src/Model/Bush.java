@@ -1,0 +1,16 @@
+package Model;
+
+public class Bush extends Land {
+    private int cost = 100;
+    private int food_left = 3;
+    public int getCost() {
+        return cost;
+    }
+    public int getFoodLeft() {
+        return food_left;
+    }
+
+    public void setFoodLeft(int food_left,int change) {
+        this.food_left = food_left+change;
+    }
+}

@@ -20,7 +20,7 @@ public class WelcomeScreen extends JFrame {
         add(loadGameButton);
         add(exitButton);
         // set the title of the welcome screen
-        setTitle("Safari Mayhem");
+        setTitle("Model.Safari Mayhem");
         // set the default close operation of the welcome screen
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // pack the welcome screen
