@@ -16,6 +16,34 @@ public abstract class Animal {
     private List<int[]> water_locations;
     private List<int[]> food_locations;
     private boolean alive = true;
+    private int currentX, currentY;
+
+    public int getCurrentX() {
+        return currentX;
+    }
+
+    public int getCurrentY() {
+        return currentY;
+    }
+
+    public void setCurrentY(int currentY) {
+        this.currentY = currentY;
+    }
+
+    public void setCurrentX(int currentX) {
+        this.currentX = currentX;
+    }
+
+    public Animal(int id, String name, int age, float hunger_change, float thirst_change, boolean isLeader, int lifespan, int visionRadius) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+        this.hunger_change = hunger_change;
+        this.thirst_change = thirst_change;
+        this.isLeader = isLeader;
+        this.lifespan = lifespan;
+        this.visionRadius = visionRadius;
+    }
 
     public String getName() {
         return name;
@@ -85,12 +113,18 @@ public abstract class Animal {
 
     public void Eat() {
         this.hunger_meter=0;
+        Move();
+        Sleep();
     }
 
     public void Sleep() {
+
     }
 
-    public void Move() {
+    public void Move(int x, int y) {
+        Migrate(currentX,x,currentY,y);
+        setCurrentX(x);
+        setCurrentY(y);
     }
 
     public void Drink() {
@@ -101,7 +135,8 @@ public abstract class Animal {
         return false;
     }
 
-    public void Migrate() {
+    public void Migrate(int x1,int x2 ,int y1,int y2) {
+
     }
 
     public boolean Search(String target) {
