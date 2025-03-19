@@ -115,16 +115,17 @@ public abstract class Animal {
 
     public void Eat() {
         this.hunger_meter=0;
-        Move();
-        Sleep();
+
     }
 
     public void Sleep() {
-
+        // sleep method makes the animal do the sleep animation
     }
 
-    public void Move(int x, int y) {
-        Migrate(currentX,x,currentY,y);
+    public void Move(int x, int y,List<int[]> blockList) {  //  removed the merge and added the list to the parameter blockList
+        for( int[] block : blockList) {
+            //here we should but the graphic part where the animal moves to this block
+        }
         setCurrentX(x);
         setCurrentY(y);
     }
@@ -134,12 +135,10 @@ public abstract class Animal {
     }
 
     public boolean Reproduce(Animal partner) {
+
         return false;
     }
 
-    public void Migrate(int x1,int x2 ,int y1,int y2) {
-
-    }
 
     public boolean Search(String target) {
         return false;

@@ -11,7 +11,13 @@ public class Sheep extends Herbivorous {
     public void Drink() {
     }
 
-    public boolean Reproduce(Animal partner) {
-        return partner instanceof Sheep ;
+    public boolean Reproduce(Animal partner) {// edited the Reporduce method to
+        //to make it that if both animals are above a certain age they can reproduce
+
+        if(getAge()>15 && partner.getAge()>15){
+            return partner instanceof Sheep;
+
+        }
+        return false;
     }
 }

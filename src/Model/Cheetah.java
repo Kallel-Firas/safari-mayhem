@@ -11,7 +11,12 @@ public class Cheetah extends Carnivorous {
     public void Drink() {
     }
 
-    public boolean Reproduce(Animal partner) {
-        return partner instanceof Cheetah;
+    public boolean Reproduce(Animal partner) { // edited the Reporduce method to
+        //to make it that if both animals are above a certain age they can reproduce
+        if(getAge()>30 && partner.getAge()>30){
+            return partner instanceof Cheetah;
+
+        }
+        return false;
     }
 }

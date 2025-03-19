@@ -11,7 +11,13 @@ public class Elephant extends Herbivorous {
     public void Drink() {
     }
 
-    public boolean Reproduce(Animal partner) {
-        return partner instanceof Elephant;
+    public boolean Reproduce(Animal partner) {// edited the Reporduce method to
+        //to make it that if both animals are above a certain age they can reproduce
+
+        if(getAge()>20 && partner.getAge()>20){
+            return partner instanceof Elephant;
+
+        }
+        return false;
     }
 }

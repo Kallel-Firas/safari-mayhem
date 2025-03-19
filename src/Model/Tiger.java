@@ -11,7 +11,13 @@ public class Tiger extends Carnivorous {
     public void Drink() {
     }
 
-    public boolean Reproduce(Animal partner) {
-        return partner instanceof Tiger;
+    public boolean Reproduce(Animal partner) {// edited the Reporduce method to
+        //to make it that if both animals are above a certain age they can reproduce
+
+        if(getAge()>25 && partner.getAge()>25){
+            return partner instanceof Tiger;
+
+        }
+        return false;
     }
 }

@@ -1,5 +1,5 @@
 import View.*;
-
+import Model.*;
 import javax.swing.*;
 
 public class Game {
