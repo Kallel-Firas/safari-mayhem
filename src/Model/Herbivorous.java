@@ -4,6 +4,10 @@ public abstract class Herbivorous extends Animal {
     private boolean eatsPlants;
     private boolean needsWaterFoodInterval;
 
+    public Herbivorous(int id, String name, int age, float hunger_change, float thirst_change, boolean isLeader, int lifespan, int visionRadius) {
+        super(id, name, age, hunger_change, thirst_change, isLeader, lifespan, visionRadius);
+    }
+
     public boolean Eat(int x, int y) {
         return false;
     }

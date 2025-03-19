@@ -1,6 +1,10 @@
 package Model;
 
 public class Elephant extends Herbivorous {
+    public Elephant(int id, String name, boolean isLeader) {
+        super(id, name, 1, 0.4F, 0.35F, isLeader, 100, 35);
+    }
+
     public boolean Eat(int x, int y) {
         return false;
     }

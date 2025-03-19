@@ -3,12 +3,14 @@ import Model.*;
 import javax.swing.*;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Random;
 
 public class Game {
     private Calendar calendar;
     private int days;
     private int hour;
     final Calendar StartingDate  ;
+    Random random = new Random();
 
     final Difficulty difficulty;
     Safari safari;
@@ -74,9 +76,84 @@ public class Game {
                 return false;
         }
     }
-    public void gameloop(){
-        while(!gameOver()){
+    public void gameloop() {
+        int hoursPassed = 0;
 
+        while (!gameOver()) {
+            try {
+                // Wait for 15 seconds
+                Thread.sleep(15000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // Fast forward one hour
+            FastForward(1);
+            hoursPassed++;
+
+            // Check if a full day has passed
+            if (hoursPassed >= 24) {
+                hoursPassed = 0;
+
+                // Update each animal's state
+                for (Animal animal : safari.getAnimalList()) {
+                    // Increment age
+                    animal.setAge(animal.getAge() + 1);
+
+                    // Increase hunger and thirst levels
+                    animal.setHungerMeter(animal.getHungerMeter() + (int)(100*animal.getHungerChange()));
+                    animal.setThirstMeter(animal.getThirstMeter() +  (int)(100*animal.getHungerChange()));
+
+                    // Check if the animal needs to eat
+                    if (animal.getHungerMeter() > 65) {
+                        if (animal.Search("food")) {
+                            animal.Eat();
+                        } else {
+                            // Move closer to food
+                            List<int[]> pathToFood = ShortestPath.findShortestPath(
+                                safari.getLandscapes(),
+                                new int[]{animal.getCurrentX(), animal.getCurrentY()},
+                                new int[]{/* coordinates of the nearest food source */}
+                            );
+                            if (!pathToFood.isEmpty()) {
+                                animal.Move(pathToFood.get(0)[0], pathToFood.get(0)[1], pathToFood);
+                            }
+                        }
+                    }
+
+                    // Move and sleep
+                    int randomX= random.nextInt(0,safari.getLandscapes().size()-1);
+
+                    int randomY= random.nextInt(0,safari.getLandscapes().get(randomX).size()-1);
+                    List<int[]> movementPath = ShortestPath.findShortestPath(
+                            safari.getLandscapes(),
+                            new int[]{animal.getCurrentX(), animal.getCurrentY()},
+                            new int[]{randomX,randomY}
+                    );
+                    while(!pathChecker(movementPath)){
+                        randomX= random.nextInt(0,safari.getLandscapes().size()-1);
+
+                        randomY= random.nextInt(0,safari.getLandscapes().get(randomX).size()-1);
+                        movementPath = ShortestPath.findShortestPath(
+                                safari.getLandscapes(),
+                                new int[]{animal.getCurrentX(), animal.getCurrentY()},
+                                new int[]{randomX,randomY}
+                        );
+                    }
+                    animal.Move(randomX, randomY,movementPath);
+                    animal.Sleep();
+
+                    // Check if the animal can reproduce
+                    /*
+                    if (animal.getAge() >= ) {
+                        Animal partner = findPartner(animal);
+                        if (partner != null && animal.Reproduce(partner)) {
+                            // Handle reproduction logic
+                        }
+                    }
+                    */
+                }
+            }
         }
     }
     public void FastForward(int hours,int days, int weeks){

@@ -1,6 +1,12 @@
 package Model;
 
 public class Cheetah extends Carnivorous {
+
+
+    public Cheetah(int id, String name, boolean isLeader) {
+        super(id, name, 1, 0.2F, 0.3F, isLeader, 70, 99);
+    }
+
     public boolean Eat(int x, int y) {
         return false;
     }

@@ -1,6 +1,10 @@
 package Model;
 
 public class Sheep extends Herbivorous {
+    public Sheep(int id, String name, boolean isLeader) {
+        super(id, name,1, 0.35F, 0.2F, isLeader, 35, 25);
+    }
+
     public boolean Eat(int x, int y) {
         return false;
     }
