@@ -5,18 +5,23 @@ import java.util.ArrayList;
 
 public class Safari {
     List<Animal> AnimalList;
-    private int difficultyLevel;
-    private int speedMode;
-    private String startingDate;
+    //private int difficultyLevel;   //all of these attributes are in the game section
+    //private int speedMode;
+    //private String startingDate;
     private List<Jeep> jeeps;
     private List<Poacher> poachers;
     private List<Ranger> rangers;
-    private List<Animal> animals;
-    private List<Landscape> landscapes;
+
+    public  List<List<Landscape>> getLandscapes() {// added this getter
+        return landscapes;
+    }
+
+    private List<Object> animals;
+    private List<List<Landscape>> landscapes;
     public Safari(int difficultyLevel, int speedMode, String startingDate) {
-        this.difficultyLevel = difficultyLevel;
-        this.speedMode = speedMode;
-        this.startingDate = startingDate;
+        //this.difficultyLevel = difficultyLevel;
+        //this.speedMode = speedMode;
+        //this.startingDate = startingDate;
         this.jeeps = new ArrayList<>();
         this.AnimalList = new ArrayList<>();
         this.poachers = new ArrayList<>();
@@ -42,6 +47,7 @@ public class Safari {
 
     public void setJeepList(List<Jeep> jeeps) {this.jeeps = jeeps;}
 
+    /*
     public int getSpeedMode() { return speedMode;}
 
     public void setSpeedMode(int speedMode) { this.speedMode = speedMode;}
@@ -51,4 +57,6 @@ public class Safari {
     public void setDate(String date) { this.startingDate = date;}
 
     public void FastForward(String action) { System.out.println("Fast forwarding: " + action);}
+
+     */
 }
