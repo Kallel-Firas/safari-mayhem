@@ -18,8 +18,7 @@ public class Poacher {
 
     public boolean captureAnimal() {
         Random rand = new Random();
-        hasCapturedAnimal =  rand.nextInt(100) < 60;
-        return hasCapturedAnimal;
+        return rand.nextBoolean();
     }
 
     public boolean evadeRangers() {
