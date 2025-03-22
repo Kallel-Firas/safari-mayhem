@@ -2,9 +2,14 @@ package Model;
 
 public class Tiger extends Carnivorous {
     public Tiger(int id, String name,  boolean isLeader) {
-        super(id, name,1, 0.25F, 0.25F, isLeader, 70,60);
+        super(id, name,1, 0.25F/24, 0.25F/24, isLeader, 70*24,60);
     }
 
+    public Tiger(int id, String name, boolean isLeader, int currentX, int currentY) {
+        super(id, name, 1, 0.4F/24, 0.35F/24, isLeader, 100*24, 35);
+        this.setCurrentX(currentX);
+        this.setCurrentY(currentY);
+    }
     public boolean Eat(int x, int y) {
         return false;
     }
@@ -18,7 +23,7 @@ public class Tiger extends Carnivorous {
     public boolean Reproduce(Animal partner) {// edited the Reporduce method to
         //to make it that if both animals are above a certain age they can reproduce
 
-        if(getAge()>25 && partner.getAge()>25){
+        if(getAge()>24*25 && partner.getAge()>24*25 & isCanReproduce() & partner.isCanReproduce()){
             return partner instanceof Tiger;
 
         }
