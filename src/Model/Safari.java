@@ -59,4 +59,135 @@ public class Safari {
     public void FastForward(String action) { System.out.println("Fast forwarding: " + action);}
 
      */
+    Animal createAnimalInstance(Animal animal) {
+        switch (animal.getClass().getSimpleName()) {
+            case "Elephant":
+                return new Elephant(animal.getId()*3, animal.getName()+animal.getId(), animal.isLeader(),animal.getCurrentX(),animal.getCurrentY());
+            case "Tiger":
+                return new Tiger(animal.getId()*3, animal.getName()+animal.getId(), animal.isLeader(),animal.getCurrentX(),animal.getCurrentY());
+            case "Cheetah":
+                return new Cheetah(animal.getId()*3, animal.getName()+animal.getId(), animal.isLeader(),animal.getCurrentX(),animal.getCurrentY());
+            case "Sheep":
+                return new Sheep(animal.getId()*3, animal.getName()+animal.getId(), animal.isLeader(),animal.getCurrentX(),animal.getCurrentY());
+            default:
+                throw new IllegalArgumentException("Unknown animal class: " + animal.getClass().getSimpleName());
+        }
+    }
+    public boolean pointChecker(int x,int y){
+        List<List<Landscape>> map=getLandscapes();
+        List<Landscape> columns=map.get(x);
+        if(x>=0 && x<=map.size()-1 && y>=0 && y<=columns.size()-1 && columns.get(y) instanceof Land && ! (columns.get(y) instanceof  Road)){
+            return true;
+        }
+        return false;
+    }
+    public boolean pathChecker(List<int[]> blockList){
+        for(int[] block:blockList){
+            if(!pointChecker(block[0],block[1])){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public int[] search(int currentX, int currentY, int radius, FoodType foodType) {
+        List<List<Landscape>> landscapes = getLandscapes();
+        int n = landscapes.size();
+        int m = landscapes.get(0).size();
+        int[] closestFood = null;
+        double closestDistance = Double.MAX_VALUE;
+
+        if (foodType == FoodType.WATER) {
+            for (int i = Math.max(0, currentX - radius); i <= Math.min(n - 1, currentX + radius); i++) {
+                for (int j = Math.max(0, currentY - radius); j <= Math.min(m - 1, currentY + radius); j++) {
+                    Landscape landscape = landscapes.get(i).get(j);
+                    if (landscape instanceof Water) {
+                        double distance = Math.sqrt(Math.pow(currentX - i, 2) + Math.pow(currentY - j, 2));
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestFood = new int[]{i, j};
+                        }
+                    }
+                }
+            }
+        } else if (foodType == FoodType.LEAF) {
+            for (int i = Math.max(0, currentX - radius); i <= Math.min(n - 1, currentX + radius); i++) {
+                for (int j = Math.max(0, currentY - radius); j <= Math.min(m - 1, currentY + radius); j++) {
+                    Landscape landscape = landscapes.get(i).get(j);
+                    if (landscape instanceof Tree || landscape instanceof Grass || landscape instanceof Bush) {
+                        double distance = Math.sqrt(Math.pow(currentX - i, 2) + Math.pow(currentY - j, 2));
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestFood = new int[]{i, j};
+                        }
+                    }
+                }
+            }
+        } else {
+            for (Animal animal : getAnimalList()) {
+                if (animal instanceof Sheep || animal instanceof Elephant) {
+                    int animalX = animal.getCurrentX();
+                    int animalY = animal.getCurrentY();
+                    double distance = Math.sqrt(Math.pow(currentX - animalX, 2) + Math.pow(currentY - animalY, 2));
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestFood = new int[]{animalX, animalY};
+                    }
+                }
+            }
+        }
+        return closestFood;
+    }
+    public void Update(){
+        for(Animal animal : AnimalList) {
+            if (animal.isAlive()) {
+                animal.Update();
+                Animal randomAnimal = null;
+                while (randomAnimal == null) {
+                    randomAnimal = getAnimalList().stream()
+                            .filter(a -> a.getClass().equals(animal.getClass()))
+                            .findAny()
+                            .orElse(null);
+                }
+
+
+                if (animal.Reproduce(randomAnimal)) { // we have to check if the animals are in each others rads
+                    getAnimalList().add(createAnimalInstance(animal));
+                    animal.setCanReproduce(false);
+                    randomAnimal.setCanReproduce(false);
+                    animal.setHungerMeter(animal.getHungerMeter()+ 15);
+                    randomAnimal.setHungerMeter(animal.getHungerMeter()+ 15);
+
+                } else {
+                    animal.setCanReproduce(true);
+                }
+                if (animal.getHungerMeter() > 40) {
+                    int[] foodIndex={};
+                    if(animal instanceof Sheep || animal instanceof Elephant){
+                        foodIndex=search(animal.getCurrentX(), animal.getCurrentY(), animal.getVisionRadius(),FoodType.LEAF);
+
+
+                    }else{
+                       foodIndex=search(animal.getCurrentX(), animal.getCurrentY(), animal.getVisionRadius(),FoodType.MEAT);
+
+                    }
+                    if(isPointInsideRadius(animal.getCurrentX(), animal.getCurrentY(), foodIndex[0],foodIndex[1], animal.getVisionRadius() )){
+                        animal.Eat();
+                    }
+                }
+
+                if(animal.getThirstMeter() > 40) {}
+                int[] foodIndex={};
+                foodIndex=search(animal.getCurrentX(), animal.getCurrentY(), animal.getVisionRadius(),FoodType.WATER);
+                if(isPointInsideRadius(animal.getCurrentX(), animal.getCurrentY(), foodIndex[0],foodIndex[1], animal.getVisionRadius() )){
+                    animal.Drink();
+                }
+
+            }
+        }
+    }
+    public boolean isPointInsideRadius(int centerX, int centerY, int pointX, int pointY, int radius) {
+        double distance = Math.sqrt(Math.pow(centerX - pointX, 2) + Math.pow(centerY - pointY, 2));
+        return distance <= radius;
+    }
 }

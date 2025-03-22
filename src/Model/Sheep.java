@@ -2,9 +2,13 @@ package Model;
 
 public class Sheep extends Herbivorous {
     public Sheep(int id, String name, boolean isLeader) {
-        super(id, name,1, 0.35F, 0.2F, isLeader, 35, 25);
+        super(id, name,1, 0.35F/24, 0.2F/24, isLeader, 35*24, 25);
     }
-
+    public Sheep(int id, String name, boolean isLeader, int currentX, int currentY) {
+        super(id, name, 1, 0.4F/24, 0.35F/24, isLeader, 100*24, 35);
+        this.setCurrentX(currentX);
+        this.setCurrentY(currentY);
+    }
     public boolean Eat(int x, int y) {
         return false;
     }
@@ -18,7 +22,7 @@ public class Sheep extends Herbivorous {
     public boolean Reproduce(Animal partner) {// edited the Reporduce method to
         //to make it that if both animals are above a certain age they can reproduce
 
-        if(getAge()>15 && partner.getAge()>15){
+        if(getAge()>24*15 && partner.getAge()>24*15 & isCanReproduce() & partner.isCanReproduce()){
             return partner instanceof Sheep;
 
         }

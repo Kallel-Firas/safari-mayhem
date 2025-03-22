@@ -45,22 +45,8 @@ public class Game {
         this.days+=days;
         updateCalendar(0,(days));
     }
-    public boolean pointChecker(int x,int y){
-        List<List<Landscape>> map=safari.getLandscapes();
-        List<Landscape> columns=map.get(x);
-        if(x>=0 && x<=map.size()-1 && y>=0 && y<=columns.size()-1 && columns.get(y) instanceof Land && ! (columns.get(y) instanceof  Road)){
-            return true;
-        }
-        return false;
-    }
-    public boolean pathChecker(List<int[]> blockList){
-        for(int[] block:blockList){
-            if(!pointChecker(block[0],block[1])){
-                return false;
-            }
-        }
-        return true;
-    }
+
+
     public boolean gameOver() {
         int monthsPassed = calendar.get(Calendar.MONTH) - StartingDate.get(Calendar.MONTH)
                            + (calendar.get(Calendar.YEAR) - StartingDate.get(Calendar.YEAR)) * 12;
@@ -105,7 +91,7 @@ public class Game {
                     animal.setThirstMeter(animal.getThirstMeter() +  (int)(100*animal.getHungerChange()));
 
                     // Check if the animal needs to eat
-                    if (animal.getHungerMeter() > 65) {
+                    if (animal.getHungerMeter() > 40) {
                         if (animal.Search("food")) {
                             animal.Eat();
                         } else {

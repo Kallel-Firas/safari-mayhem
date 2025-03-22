@@ -36,6 +36,14 @@ public abstract class Animal {
         this.currentX = currentX;
     }
 
+    public boolean isCanReproduce() {
+        return canReproduce;
+    }
+
+    public void setCanReproduce(boolean canReproduce) {
+        this.canReproduce = canReproduce;
+    }
+
     public Animal(int id, String name, int age, float hunger_change, float thirst_change, boolean isLeader, int lifespan, int visionRadius) {
         this.id = id;
         this.name = name;
@@ -139,8 +147,31 @@ public abstract class Animal {
         return false;
     }
 
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public void Update() {
+        setAge(getAge()+1);
+        setHungerMeter(getHungerMeter() + (int)(100*getHungerChange()));
+        setThirstMeter(getThirstMeter() +  (int)(100*getHungerChange()));
+
+        if(age>=lifespan) {
+            alive = false;
+        }
+
+
+    }
 
     public boolean Search(String target) {
         return false;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public boolean isLeader() {
+        return isLeader;
     }
 }
