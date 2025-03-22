@@ -141,6 +141,28 @@ public abstract class Animal {
 
 
     public boolean Search(String target) {
-        return false;
+        List<int[]> locations;
+
+        if (target.equalsIgnoreCase("food")) {
+            locations = food_locations;
+        } else if (target.equalsIgnoreCase("water")) {
+            locations = water_locations;
+        } else {
+            return false;
+        }
+
+        int[] nearest = null;
+        double minDistance = Double.MAX_VALUE;
+
+        for (int[] location : locations) {
+            double distance = Math.sqrt(Math.pow(location[0], 2) + Math.pow(location[1], 2));
+
+            if (distance <= visionRadius && distance < minDistance) {
+                minDistance = distance;
+                nearest = location;
+            }
+        }
+
+        return nearest != null;
     }
 }
