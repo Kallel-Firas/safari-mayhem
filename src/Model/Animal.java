@@ -2,7 +2,7 @@ package Model;
 
 import java.util.List;
 
-public abstract class Animal {
+public abstract class Animal extends Entity {
     private String name;
     private int id;
     private int age;
@@ -19,6 +19,7 @@ public abstract class Animal {
     private List<int[]> food_locations;
     private boolean alive = true;
     private int currentX, currentY;
+    public List<int[]> blockList;
 
     public int getCurrentX() {
         return currentX;

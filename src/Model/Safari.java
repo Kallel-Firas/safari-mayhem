@@ -11,6 +11,8 @@ public class Safari {
     private List<Jeep> jeeps;
     private List<Poacher> poachers;
     private List<Ranger> rangers;
+    private List<int[]> blockList = new ArrayList<>();
+
 
     public  List<List<Landscape>> getLandscapes() {// added this getter
         return landscapes;
@@ -162,28 +164,53 @@ public class Safari {
                     animal.setCanReproduce(true);
                 }
                 if (animal.getHungerMeter() > 40) {
-                    int[] foodIndex={};
-                    if(animal instanceof Sheep || animal instanceof Elephant){
-                        foodIndex=search(animal.getCurrentX(), animal.getCurrentY(), animal.getVisionRadius(),FoodType.LEAF);
+                    FoodType foodType = (animal instanceof Sheep || animal instanceof Elephant) ? FoodType.LEAF : FoodType.MEAT;
+                    int[] foodIndex = search(animal.getCurrentX(), animal.getCurrentY(), animal.getVisionRadius(), foodType);
 
-
-                    }else{
-                       foodIndex=search(animal.getCurrentX(), animal.getCurrentY(), animal.getVisionRadius(),FoodType.MEAT);
-
-                    }
-                    if(isPointInsideRadius(animal.getCurrentX(), animal.getCurrentY(), foodIndex[0],foodIndex[1], animal.getVisionRadius() )){
-                        animal.Eat();
+                    if (foodIndex != null) {
+                        moveTowardsTarget(animal, foodIndex[0], foodIndex[1],blockList);
+                        if (animal.getCurrentX() == foodIndex[0] && animal.getCurrentY() == foodIndex[1]) {
+                            animal.Eat();
+                        }
                     }
                 }
 
-                if(animal.getThirstMeter() > 40) {}
-                int[] foodIndex={};
-                foodIndex=search(animal.getCurrentX(), animal.getCurrentY(), animal.getVisionRadius(),FoodType.WATER);
-                if(isPointInsideRadius(animal.getCurrentX(), animal.getCurrentY(), foodIndex[0],foodIndex[1], animal.getVisionRadius() )){
-                    animal.Drink();
+                // Handle Thirst and Movement (fixed code structure)
+                if (animal.getThirstMeter() > 40) {
+                    int[] waterIndex = search(animal.getCurrentX(), animal.getCurrentY(), animal.getVisionRadius(), FoodType.WATER);
+                    if (waterIndex != null) {
+                        moveTowardsTarget(animal, waterIndex[0], waterIndex[1],blockList);
+                        if (animal.getCurrentX() == waterIndex[0] && animal.getCurrentY() == waterIndex[1]) {
+                            animal.Drink();
+                        }
+                    }
                 }
 
             }
+        }
+    }
+
+    private void moveTowardsTarget(Animal animal, int targetX, int targetY,List<int[]> blockList) {
+        int currentX = animal.getCurrentX();
+        int currentY = animal.getCurrentY();
+
+        int dx = targetX - currentX;
+        int dy = targetY - currentY;
+
+        int stepX = Integer.compare(dx, 0); // Returns -1, 0, or 1
+        int stepY = Integer.compare(dy, 0);
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            stepY = 0;
+        } else {
+            stepX = 0;
+        }
+
+        int newX = currentX + stepX;
+        int newY = currentY + stepY;
+
+        if (pointChecker(newX, newY)) {
+            animal.Move(newX, newY,blockList);
         }
     }
     public boolean isPointInsideRadius(int centerX, int centerY, int pointX, int pointY, int radius) {
