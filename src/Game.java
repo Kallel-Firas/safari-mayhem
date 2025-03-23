@@ -66,13 +66,8 @@ public class Game {
         int hoursPassed = 0;
 
         while (!gameOver()) {
-            try {
-                // Wait for 15 seconds
-                Thread.sleep(15000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
+            // Wait for 15 seconds
+            Timer timer = new Timer(15000, null);
             // Fast forward one hour
             FastForward(1);
             hoursPassed++;
@@ -116,7 +111,7 @@ public class Game {
                             new int[]{animal.getCurrentX(), animal.getCurrentY()},
                             new int[]{randomX,randomY}
                     );
-                    while(!pathChecker(movementPath)){
+                    while(!safari.pathChecker(movementPath)){
                         randomX= random.nextInt(0,safari.getLandscapes().size()-1);
 
                         randomY= random.nextInt(0,safari.getLandscapes().get(randomX).size()-1);

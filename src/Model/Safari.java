@@ -26,6 +26,53 @@ public class Safari {
         this.AnimalList = new ArrayList<>();
         this.poachers = new ArrayList<>();
         this.rangers = new ArrayList<>();
+        // populate landscape
+        this.landscapes = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            List<Landscape> column = new ArrayList<>();
+            for (int j = 0; j < 50; j++) {
+                column.add(new Dirt());
+            }
+            landscapes.add(column);
+        }
+        // Add some water to the landscape
+        for (int i = 0; i < 10; i++) {
+            int x = (int) (Math.random() * 50);
+            int y = (int) (Math.random() * 50);
+            // Add a pond, not just one tile.
+            for (int j = -1; j <= 1; j++) {
+                for (int k = -1; k <= 1; k++) {
+                    if (x + j >= 0 && x + j < 50 && y + k >= 0 && y + k < 50) {
+                        landscapes.get(x + j).set(y + k, new Water());
+                    }
+                }
+            }
+        }
+        // Add some Animals to the landscape
+        for (int i = 0; i < 10; i++) {
+            int x = (int) (Math.random() * 50);
+            int y = (int) (Math.random() * 50);
+            Animal animal = new Elephant(i, "Elephant" + i, false, x, y);
+            AnimalList.add(animal);
+        }
+        for (int i = 0; i < 10; i++) {
+            int x = (int) (Math.random() * 50);
+            int y = (int) (Math.random() * 50);
+            Animal animal = new Lion(i, "Lion" + i, false, x, y);
+            AnimalList.add(animal);
+        }
+        for (int i = 0; i < 10; i++) {
+            int x = (int) (Math.random() * 50);
+            int y = (int) (Math.random() * 50);
+            Animal animal = new Cheetah(i, "Cheetah" + i, false, x, y);
+            AnimalList.add(animal);
+        }
+        for (int i = 0; i < 10; i++) {
+            int x = (int) (Math.random() * 50);
+            int y = (int) (Math.random() * 50);
+            Animal animal = new Sheep(i, "Sheep" + i, false, x, y);
+            AnimalList.add(animal);
+        }
     }
 
     public void setAnimalList(List<Animal> animalList) {
@@ -36,6 +83,17 @@ public class Safari {
     public void addPoacher(Poacher poacher) { poachers.add(poacher);}
     public void addRanger(Ranger ranger) { rangers.add(ranger);}
     public void addAnimals(Animal animal) {AnimalList.add(animal);}
+
+    // add a public method to get all the entities (Animals, Poachers, Rangers, Jeeps)
+    public List<Object> getEntities() {
+        List<Object> entities = new ArrayList<>();
+        entities.addAll(AnimalList);
+        entities.addAll(poachers);
+        entities.addAll(rangers);
+        entities.addAll(jeeps);
+        return entities;
+    }
+
 
 
     public void UpdateSafari(){
@@ -64,7 +122,7 @@ public class Safari {
             case "Elephant":
                 return new Elephant(animal.getId()*3, animal.getName()+animal.getId(), animal.isLeader(),animal.getCurrentX(),animal.getCurrentY());
             case "Tiger":
-                return new Tiger(animal.getId()*3, animal.getName()+animal.getId(), animal.isLeader(),animal.getCurrentX(),animal.getCurrentY());
+                return new Lion(animal.getId()*3, animal.getName()+animal.getId(), animal.isLeader(),animal.getCurrentX(),animal.getCurrentY());
             case "Cheetah":
                 return new Cheetah(animal.getId()*3, animal.getName()+animal.getId(), animal.isLeader(),animal.getCurrentX(),animal.getCurrentY());
             case "Sheep":

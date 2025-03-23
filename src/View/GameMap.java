@@ -25,13 +25,14 @@ public class GameMap extends JPanel {
     // load cheetah and baby cheetah images
     private BufferedImage cheetahImage;
     private BufferedImage babyCheetahImage;
-    private List<Landscape> terrain;
+    private List<List<Landscape>> terrain;
     private List<Object> entities;
 
     private Map<Object, BufferedImage> terrainImages = new HashMap<>();
     private Map<Object, BufferedImage> entityImages = new HashMap<>();
     // load the safari map
-    public GameMap(List<Landscape> terrain, List<Objects> animals) {
+    private final int textureResolution = 32;
+    public GameMap(List<Landscape> terrain, List<Object> entities) {
         try {
             terrainImages.put(Water.class, ImageIO.read(new File("resources/water.png")));
             // do like the line above for the following lines
@@ -41,34 +42,54 @@ public class GameMap extends JPanel {
             terrainImages.put(Bush.class, ImageIO.read(new File("resources/bush.png")));
             // load the images for the entities into the entityImages map
             entityImages.put(Sheep.class, ImageIO.read(new File("resources/sheep.png")));
-            entityImages.put(BabySheep.class, ImageIO.read(new File("resources/baby_sheep.png")));
+            //entityImages.put(BabySheep.class, ImageIO.read(new File("resources/baby_sheep.png")));
             entityImages.put(Cheetah.class, ImageIO.read(new File("resources/cheetah.png")));
-            entityImages.put(BabyCheetah.class, ImageIO.read(new File("resources/baby_cheetah.png")));
-            entityImages.put(Poacher.class, ImageIO.read(new File("resources/poacher.png")));
-            entityImages.put(Ranger.class, ImageIO.read(new File("resources/ranger.png")));
-            entityImages.put(Jeep.class, ImageIO.read(new File("resources/jeep.png")));
+            //entityImages.put(BabyCheetah.class, ImageIO.read(new File("resources/baby_cheetah.png")));
+            entityImages.put(Elephant.class, ImageIO.read(new File("resources/elephant.png")));
+            //entityImages.put(BabyElephant.class, ImageIO.read(new File("resources/baby_elephant.png")));
+            entityImages.put(Lion.class, ImageIO.read(new File("resources/lion.png")));
+            //entityImages.put(BabyLion.class, ImageIO.read(new File("resources/baby_lion.png")));
+
+            //entityImages.put(Poacher.class, ImageIO.read(new File("resources/poacher.png")));
+            //entityImages.put(Ranger.class, ImageIO.read(new File("resources/ranger.png")));
+            //entityImages.put(Jeep.class, ImageIO.read(new File("resources/jeep.png")));
 
         } catch (IOException e) {
             System.out.println("Error loading image");
         }
-        setPreferredSize(new Dimension(50*16, 50*16));
+        setPreferredSize(new Dimension(50*textureResolution/2, 50*textureResolution/2));
+    }
+
+    public void update(List<List<Landscape>> terrain, List<Object> entities) {
         this.terrain = terrain;
-        this.animals = animals;
+        this.entities = entities;
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        for (int x = 0; x < 50; x++) {
-            for (int y = 0; y < 50; y++) {
-                g.drawImage(terrainImages.get(terrain.get(x + 50 * y).getClass()), x*16, y*16, null);
+        if (terrain == null) {
+            return;
+        }
+        for (int x = 0; x < terrain.size(); x++) {
+            for (int y = 0; y < terrain.size(); y++) {
+                Landscape currentTile = terrain.get(x).get(y);
+                BufferedImage image = terrainImages.get(currentTile.getClass());
+                g.drawImage(image, x*textureResolution, y*textureResolution, null);
             }
         }
-        g.drawImage(grassImage, 0, 0, null);
-        g.drawImage(waterImage, 16, 0, null);
-        g.drawImage(treeImage, 16*16, 16*15, null);
-        g.drawImage(cheetahImage, 16*32, 16*32, null);
-        g.drawImage(babyCheetahImage, 16*16, 16*16, null);
-        g.drawImage(babySheepImage, 16*16, 16*17, null);
+        // draw entities
+        for (Object entity : entities) {
+            BufferedImage image = entityImages.get(entity.getClass());
+            if (entity instanceof Animal animal) {
+                g.drawImage(image, animal.getCurrentX()*textureResolution, animal.getCurrentY()*textureResolution, null);
+            }
+        }
+//        g.drawImage(entityImages.get(Cheetah.class), 0, 0, null);
+//        g.drawImage(waterImage, 16, 0, null);
+//        g.drawImage(treeImage, 16*16, 16*15, null);
+//        g.drawImage(cheetahImage, 16*32, 16*32, null);
+//        g.drawImage(babyCheetahImage, 16*16, 16*16, null);
+//        g.drawImage(babySheepImage, 16*16, 16*17, null);
     }
 }
