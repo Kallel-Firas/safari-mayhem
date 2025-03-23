@@ -36,6 +36,14 @@ public abstract class Animal {
         this.currentX = currentX;
     }
 
+    public boolean isCanReproduce() {
+        return canReproduce;
+    }
+
+    public void setCanReproduce(boolean canReproduce) {
+        this.canReproduce = canReproduce;
+    }
+
     public Animal(int id, String name, int age, float hunger_change, float thirst_change, boolean isLeader, int lifespan, int visionRadius) {
         this.id = id;
         this.name = name;
@@ -115,16 +123,17 @@ public abstract class Animal {
 
     public void Eat() {
         this.hunger_meter=0;
-        Move();
-        Sleep();
+
     }
 
     public void Sleep() {
-
+        // sleep method makes the animal do the sleep animation
     }
 
-    public void Move(int x, int y) {
-        Migrate(currentX,x,currentY,y);
+    public void Move(int x, int y,List<int[]> blockList) {  //  removed the merge and added the list to the parameter blockList
+        for( int[] block : blockList) {
+            //here we should but the graphic part where the animal moves to this block
+        }
         setCurrentX(x);
         setCurrentY(y);
     }
@@ -134,14 +143,35 @@ public abstract class Animal {
     }
 
     public boolean Reproduce(Animal partner) {
+
         return false;
     }
 
-    public void Migrate(int x1,int x2 ,int y1,int y2) {
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public void Update() {
+        setAge(getAge()+1);
+        setHungerMeter(getHungerMeter() + (int)(100*getHungerChange()));
+        setThirstMeter(getThirstMeter() +  (int)(100*getHungerChange()));
+
+        if(age>=lifespan) {
+            alive = false;
+        }
+
 
     }
 
     public boolean Search(String target) {
         return false;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public boolean isLeader() {
+        return isLeader;
     }
 }
