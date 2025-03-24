@@ -255,7 +255,7 @@ public class Safari {
         int dx = targetX - currentX;
         int dy = targetY - currentY;
 
-        int stepX = Integer.compare(dx, 0); // Returns -1, 0, or 1
+        int stepX = Integer.compare(dx, 0); 
         int stepY = Integer.compare(dy, 0);
 
         if (Math.abs(dx) > Math.abs(dy)) {
