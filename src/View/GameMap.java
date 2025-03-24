@@ -3,6 +3,8 @@ package View;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
@@ -11,7 +13,7 @@ import java.util.*;
 
 import Model.*;
 
-public class GameMap extends JPanel {
+public class GameMap extends JPanel implements MouseWheelListener {
     // also load images: tree, grass, bush
     private BufferedImage treeImage;
     private BufferedImage grassImage;
@@ -30,8 +32,14 @@ public class GameMap extends JPanel {
 
     private Map<Object, BufferedImage> terrainImages = new HashMap<>();
     private Map<Object, BufferedImage> entityImages = new HashMap<>();
-    // load the safari map
+
     private final int textureResolution = 32;
+
+    private int viewportX = 0;
+    private int viewportY = 0;
+    private final int viewportWidth = 25; // Display 25 tiles horizontally
+    private final int viewportHeight = 25;
+
     public GameMap(List<Landscape> terrain, List<Object> entities) {
         try {
             terrainImages.put(Water.class, ImageIO.read(new File("resources/water.png")));
@@ -58,6 +66,7 @@ public class GameMap extends JPanel {
             System.out.println("Error loading image");
         }
         setPreferredSize(new Dimension(50*textureResolution/2, 50*textureResolution/2));
+        addMouseWheelListener(this);
     }
 
     public void update(List<List<Landscape>> terrain, List<Object> entities) {
@@ -65,31 +74,69 @@ public class GameMap extends JPanel {
         this.entities = entities;
     }
 
+//    @Override
+//    public void paintComponent(Graphics g) {
+//        super.paintComponent(g);
+//        if (terrain == null) {
+//            return;
+//        }
+//        for (int x = 0; x < terrain.size(); x++) {
+//            for (int y = 0; y < terrain.size(); y++) {
+//                Landscape currentTile = terrain.get(x).get(y);
+//                BufferedImage image = terrainImages.get(currentTile.getClass());
+//                g.drawImage(image, x*textureResolution, y*textureResolution, null);
+//            }
+//        }
+//        // draw entities
+//        for (Object entity : entities) {
+//            BufferedImage image = entityImages.get(entity.getClass());
+//            if (entity instanceof Animal animal) {
+//                g.drawImage(image, animal.getCurrentX()*textureResolution, animal.getCurrentY()*textureResolution, null);
+//            }
+//        }
+////        g.drawImage(entityImages.get(Cheetah.class), 0, 0, null);
+////        g.drawImage(waterImage, 16, 0, null);
+////        g.drawImage(treeImage, 16*16, 16*15, null);
+////        g.drawImage(cheetahImage, 16*32, 16*32, null);
+////        g.drawImage(babyCheetahImage, 16*16, 16*16, null);
+////        g.drawImage(babySheepImage, 16*16, 16*17, null);
+//    }
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (terrain == null) {
             return;
         }
-        for (int x = 0; x < terrain.size(); x++) {
-            for (int y = 0; y < terrain.size(); y++) {
+        for (int x = viewportX; x < viewportX + viewportWidth && x < terrain.size(); x++) {
+            for (int y = viewportY; y < viewportY + viewportHeight && y < terrain.get(x).size(); y++) {
                 Landscape currentTile = terrain.get(x).get(y);
                 BufferedImage image = terrainImages.get(currentTile.getClass());
-                g.drawImage(image, x*textureResolution, y*textureResolution, null);
+                g.drawImage(image, (x - viewportX) * textureResolution, (y - viewportY) * textureResolution, null);
             }
         }
-        // draw entities
         for (Object entity : entities) {
             BufferedImage image = entityImages.get(entity.getClass());
             if (entity instanceof Animal animal) {
-                g.drawImage(image, animal.getCurrentX()*textureResolution, animal.getCurrentY()*textureResolution, null);
+                int entityX = animal.getCurrentX();
+                int entityY = animal.getCurrentY();
+                if (entityX >= viewportX && entityX < viewportX + viewportWidth && entityY >= viewportY && entityY < viewportY + viewportHeight) {
+                    g.drawImage(image, (entityX - viewportX) * textureResolution, (entityY - viewportY) * textureResolution, null);
+                }
             }
         }
-//        g.drawImage(entityImages.get(Cheetah.class), 0, 0, null);
-//        g.drawImage(waterImage, 16, 0, null);
-//        g.drawImage(treeImage, 16*16, 16*15, null);
-//        g.drawImage(cheetahImage, 16*32, 16*32, null);
-//        g.drawImage(babyCheetahImage, 16*16, 16*16, null);
-//        g.drawImage(babySheepImage, 16*16, 16*17, null);
     }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        int notches = e.getWheelRotation();
+        if (e.isShiftDown()) {
+            viewportX = Math.max(0, Math.min(terrain.size() - viewportWidth, viewportX + notches));
+        } else {
+            viewportY = Math.max(0, Math.min(terrain.get(0).size() - viewportHeight, viewportY + notches));
+        }
+        repaint();
+    }
+
+
 }
