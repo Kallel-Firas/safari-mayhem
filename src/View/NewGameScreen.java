@@ -2,6 +2,7 @@ package View;
 
 import javax.swing.*;
 import java.awt.*;
+import javax.swing.Timer;
 
 public class NewGameScreen extends JFrame {
 
@@ -34,6 +35,8 @@ public class NewGameScreen extends JFrame {
             gameScreen.setLocationRelativeTo(null);
             gameScreen.setVisible(true);
             this.dispose();
+            Timer timer = new Timer(1000, e2 -> {gameScreen.run();});
+            timer.start();
         });
 
         pack();
