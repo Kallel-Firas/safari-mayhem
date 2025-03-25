@@ -190,7 +190,7 @@ public class Safari {
                     int animalY = animal.getCurrentY();
                     double distance = Math.sqrt(Math.pow(currentX - animalX, 2) + Math.pow(currentY - animalY, 2));
                     if (distance < closestDistance) {
-                        closestDistance = distance;
+                        closestDistance = distance;// nearest source
                         closestFood = new int[]{animalX, animalY};
                     }
                 }
