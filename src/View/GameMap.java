@@ -40,7 +40,13 @@ public class GameMap extends JPanel implements MouseWheelListener {
     private final int viewportWidth = 25; // Display 25 tiles horizontally
     private final int viewportHeight = 25;
 
-    public GameMap(List<Landscape> terrain, List<Object> entities) {
+    private MiniMap miniMap;
+
+    public void setMiniMap(MiniMap miniMap) {
+        this.miniMap = miniMap;
+    }
+
+    public GameMap() {
         try {
             terrainImages.put(Water.class, ImageIO.read(new File("resources/water.png")));
             // do like the line above for the following lines
@@ -125,6 +131,11 @@ public class GameMap extends JPanel implements MouseWheelListener {
                 }
             }
         }
+
+    }
+
+    public Map<Object, BufferedImage> getTerrainImages() {
+        return terrainImages;
     }
 
     @Override
@@ -135,8 +146,26 @@ public class GameMap extends JPanel implements MouseWheelListener {
         } else {
             viewportY = Math.max(0, Math.min(terrain.get(0).size() - viewportHeight, viewportY + notches));
         }
+        if (miniMap != null) {
+            miniMap.updateViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        }
         repaint();
     }
 
+    public int getViewportX() {
+        return viewportX;
+    }
+    public int getViewportY() {
+        return viewportY;
+    }
+
+    public void setViewport(int x, int y) {
+        viewportX = Math.max(0, Math.min(terrain.size() - viewportWidth, x));
+        viewportY = Math.max(0, Math.min(terrain.get(0).size() - viewportHeight, y));
+        if (miniMap != null) {
+            miniMap.updateViewport(viewportX, viewportY, viewportWidth, viewportHeight);
+        }
+        repaint();
+    }
 
 }
