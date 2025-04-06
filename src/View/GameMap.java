@@ -28,7 +28,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
     private BufferedImage cheetahImage;
     private BufferedImage babyCheetahImage;
     private List<List<Landscape>> terrain;
-    private List<Object> entities;
+    private List<Entity> entities;
 
     private Map<Object, BufferedImage> terrainImages = new HashMap<>();
     private Map<Object, BufferedImage> entityImages = new HashMap<>();
@@ -75,7 +75,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
         addMouseWheelListener(this);
     }
 
-    public void update(List<List<Landscape>> terrain, List<Object> entities) {
+    public void update(List<List<Landscape>> terrain, List<Entity> entities) {
         this.terrain = terrain;
         this.entities = entities;
     }
@@ -121,17 +121,21 @@ public class GameMap extends JPanel implements MouseWheelListener {
                 g.drawImage(image, (x - viewportX) * textureResolution, (y - viewportY) * textureResolution, null);
             }
         }
-        for (Object entity : entities) {
+        for (Entity entity : entities) {
             BufferedImage image = entityImages.get(entity.getClass());
-            if (entity instanceof Animal animal) {
-                int entityX = animal.getCurrentX();
-                int entityY = animal.getCurrentY();
-                if (entityX >= viewportX && entityX < viewportX + viewportWidth && entityY >= viewportY && entityY < viewportY + viewportHeight) {
-                    g.drawImage(image, (entityX - viewportX) * textureResolution, (entityY - viewportY) * textureResolution, null);
-                }
+            int entityX = entity.getCurrentX();
+            int entityY = entity.getCurrentY();
+            if (entityX >= viewportX && entityX < viewportX + viewportWidth && entityY >= viewportY && entityY < viewportY + viewportHeight) {
+                g.drawImage(image, (entityX - viewportX) * textureResolution, (entityY - viewportY) * textureResolution, null);
             }
         }
-
+        for (Entity entity : entities) {
+            if (entity instanceof Vegetation) {
+                Vegetation vegetation = (Vegetation) entity;
+                BufferedImage image = terrainImages.get(vegetation.getClass());
+                g.drawImage(image, (vegetation.getCurrentX() - viewportX) * textureResolution, (vegetation.getCurrentY() - viewportY) * textureResolution, null);
+            }
+        }
     }
 
     public Map<Object, BufferedImage> getTerrainImages() {

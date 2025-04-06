@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class Safari {
-    List<Animal> AnimalList;
+    List<Herd> herdList;
     //private int difficultyLevel;   //all of these attributes are in the game section
     //private int speedMode;
     //private String startingDate;
@@ -12,20 +12,20 @@ public class Safari {
     private List<Poacher> poachers;
     private List<Ranger> rangers;
     private List<int[]> blockList = new ArrayList<>();
+    private List<Vegetation> vegetationList = new ArrayList<>();
+    private List<List<Landscape>> landscapes;
 
 
     public  List<List<Landscape>> getLandscapes() {// added this getter
         return landscapes;
     }
 
-    private List<Object> animals;
-    private List<List<Landscape>> landscapes;
     public Safari(int difficultyLevel, int speedMode, String startingDate) {
         //this.difficultyLevel = difficultyLevel;
         //this.speedMode = speedMode;
         //this.startingDate = startingDate;
         this.jeeps = new ArrayList<>();
-        this.AnimalList = new ArrayList<>();
+        this.herdList = new ArrayList<>();
         this.poachers = new ArrayList<>();
         this.rangers = new ArrayList<>();
         // populate landscape
@@ -51,45 +51,52 @@ public class Safari {
             }
         }
         // Add some Animals to the landscape
+        Herd<Elephant> elephantHerd = new Herd<>();
+        elephantHerd.generatePopulation("Elephant");
+        Herd<Lion> lionHerd = new Herd<>();
+        lionHerd.generatePopulation("Lion");
+        Herd<Cheetah> cheetahHerd = new Herd<>();
+        cheetahHerd.generatePopulation("Cheetah");
+        Herd<Sheep> sheepHerd = new Herd<>();
+        sheepHerd.generatePopulation("Sheep");
+        herdList.add(elephantHerd);
+        herdList.add(lionHerd);
+        herdList.add(cheetahHerd);
+        herdList.add(sheepHerd);
+
+        // Add some vegetation to the landscape
         for (int i = 0; i < 10; i++) {
             int x = (int) (Math.random() * 50);
             int y = (int) (Math.random() * 50);
-            Animal animal = new Elephant(i, "Elephant" + i, false, x, y);
-            AnimalList.add(animal);
-        }
-        for (int i = 0; i < 10; i++) {
-            int x = (int) (Math.random() * 50);
-            int y = (int) (Math.random() * 50);
-            Animal animal = new Lion(i, "Lion" + i, false, x, y);
-            AnimalList.add(animal);
-        }
-        for (int i = 0; i < 10; i++) {
-            int x = (int) (Math.random() * 50);
-            int y = (int) (Math.random() * 50);
-            Animal animal = new Cheetah(i, "Cheetah" + i, false, x, y);
-            AnimalList.add(animal);
-        }
-        for (int i = 0; i < 10; i++) {
-            int x = (int) (Math.random() * 50);
-            int y = (int) (Math.random() * 50);
-            Animal animal = new Sheep(i, "Sheep" + i, false, x, y);
-            AnimalList.add(animal);
+            double randomValue = Math.random();
+            if (randomValue < 0.3) {
+                vegetationList.add(new Tree(x, y));
+            } else if (randomValue < 0.7) {
+                vegetationList.add(new Bush(x, y));
+            } else {
+                vegetationList.add(new Grass(x, y));
+            }
         }
     }
 
-    public void setAnimalList(List<Animal> animalList) {
-        AnimalList = animalList;
+    public List<Animal> getAnimalList() {
+        List<Animal> animals = new ArrayList<>();
+        for (Herd herd : herdList) {
+            animals.addAll(herd.getAnimalList());
+        }
+        return animals;
     }
-    public List<Animal> getAnimalList() {return AnimalList;}
     public void addJeep(Jeep jeep) { jeeps.add(jeep);}
     public void addPoacher(Poacher poacher) { poachers.add(poacher);}
     public void addRanger(Ranger ranger) { rangers.add(ranger);}
-    public void addAnimals(Animal animal) {AnimalList.add(animal);}
 
     // add a public method to get all the entities (Animals, Poachers, Rangers, Jeeps)
-    public List<Object> getEntities() {
-        List<Object> entities = new ArrayList<>();
-        entities.addAll(AnimalList);
+    public List<Entity> getEntities() {
+        List<Entity> entities = new ArrayList<>();
+        for (Herd herd : herdList) {
+            entities.addAll(herd.getAnimalList());
+        }
+        entities.addAll(vegetationList);
         entities.addAll(poachers);
         entities.addAll(rangers);
         entities.addAll(jeeps);
@@ -153,7 +160,7 @@ public class Safari {
     public int[] search(int currentX, int currentY, int radius, FoodType foodType) {
         List<List<Landscape>> landscapes = getLandscapes();
         int n = landscapes.size();
-        int m = landscapes.get(0).size();
+        int m = landscapes.getFirst().size();
         int[] closestFood = null;
         double closestDistance = Double.MAX_VALUE;
 
@@ -171,15 +178,14 @@ public class Safari {
                 }
             }
         } else if (foodType == FoodType.LEAF) {
-            for (int i = Math.max(0, currentX - radius); i <= Math.min(n - 1, currentX + radius); i++) {
-                for (int j = Math.max(0, currentY - radius); j <= Math.min(m - 1, currentY + radius); j++) {
-                    Landscape landscape = landscapes.get(i).get(j);
-                    if (landscape instanceof Tree || landscape instanceof Grass || landscape instanceof Bush) {
-                        double distance = Math.sqrt(Math.pow(currentX - i, 2) + Math.pow(currentY - j, 2));
-                        if (distance < closestDistance) {
-                            closestDistance = distance;
-                            closestFood = new int[]{i, j};
-                        }
+            for (Vegetation vegetation : vegetationList) {
+                if (vegetation instanceof Tree || vegetation instanceof Bush || vegetation instanceof Grass) {
+                    int vegetationX = vegetation.getCurrentX();
+                    int vegetationY = vegetation.getCurrentY();
+                    double distance = Math.sqrt(Math.pow(currentX - vegetationX, 2) + Math.pow(currentY - vegetationY, 2));
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestFood = new int[]{vegetationX, vegetationY};
                     }
                 }
             }
@@ -199,7 +205,7 @@ public class Safari {
         return closestFood;
     }
     public void Update(){
-        for(Animal animal : AnimalList) {
+        for(Animal animal : getAnimalList()) {
             if (animal.isAlive()) {
                 animal.Update();
                 Animal randomAnimal = null;

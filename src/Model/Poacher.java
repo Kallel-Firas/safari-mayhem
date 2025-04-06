@@ -2,7 +2,7 @@ package Model;
 
 import java.util.Random;
 
-public class Poacher {
+public class Poacher extends Entity {
     private boolean isVisible;
     private boolean hasCapturedAnimal;
 

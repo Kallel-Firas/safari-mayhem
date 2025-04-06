@@ -1,6 +1,9 @@
 package Model;
 
-public class Tree extends Land {
+public class Tree extends Vegetation {
+    public Tree(int x, int y) {
+        super(x, y);
+    }
     private int cost = 300;
     private int food_left = 7;
     private boolean isGrown = true;

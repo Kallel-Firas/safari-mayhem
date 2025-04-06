@@ -1,6 +1,6 @@
 package Model;
 
-public class Ranger {
+public class Ranger extends Entity{
     private int salary;
 
     public Ranger(int salary) {

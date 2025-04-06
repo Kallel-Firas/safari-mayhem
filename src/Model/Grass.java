@@ -1,6 +1,9 @@
 package Model;
 
-public class Grass extends Land {
+public class Grass extends Vegetation {
+    public Grass(int x, int y) {
+        super(x, y);
+    }
     private int cost = 50;
     private int food_left = 1;
     public int getCost() {
