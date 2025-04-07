@@ -51,13 +51,13 @@ public class Safari {
             }
         }
         // Add some Animals to the landscape
-        Herd<Elephant> elephantHerd = new Herd<>();
+        Herd<Elephant> elephantHerd = new Herd<>(landscapes);
         elephantHerd.generatePopulation("Elephant");
-        Herd<Lion> lionHerd = new Herd<>();
+        Herd<Lion> lionHerd = new Herd<>(landscapes);
         lionHerd.generatePopulation("Lion");
-        Herd<Cheetah> cheetahHerd = new Herd<>();
+        Herd<Cheetah> cheetahHerd = new Herd<>(landscapes);
         cheetahHerd.generatePopulation("Cheetah");
-        Herd<Sheep> sheepHerd = new Herd<>();
+        Herd<Sheep> sheepHerd = new Herd<>(landscapes);
         sheepHerd.generatePopulation("Sheep");
         herdList.add(elephantHerd);
         herdList.add(lionHerd);

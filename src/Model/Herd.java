@@ -6,11 +6,23 @@ import java.util.List;
 public class Herd<T extends Animal> {
     private List<T> animalList;
     private boolean isSleeping = false;
-    private boolean thirsty = false;
-    private boolean hungry = false;
+    private boolean thirsty;
+    private boolean hungry;
+    private int[] discoveredWaterLocation = null;
+    private int[] discoveredFoodLocation = null;
+    private List<List<Landscape>> landscapeList;
+    private int thirstMeter;
+    private int hungerMeter;
+    private final int thirstRate = 5;
+    private final int hungerRate = 7;
 
-    public Herd() {
+    public Herd(List<List<Landscape>> landscapeList) {
         this.animalList = new ArrayList<>();
+        this.landscapeList = new ArrayList<>();
+        thirstMeter = 100;
+        thirsty = false;
+        hungerMeter = 100;
+        hungry = false;
     }
 
     public List<T> getAnimalList() {
@@ -79,14 +91,21 @@ public class Herd<T extends Animal> {
     }
 
     public void update(){
+        thirstMeter -= thirstRate;
+        hungerMeter -= hungerRate;
+        if (thirstMeter <= 30) {
+            thirsty = true;
+        }
+        if (hungerMeter <= 30) {
+            hungry = true;
+        }
         if (isSleeping && !thirsty && !hungry) {
             return;
         }
         if (isSleeping && (thirsty || hungry)) {
             isSleeping = false;
-            SearchForFoodAndWater();
         } else if (!isSleeping && (thirsty || hungry)) {
-            MoveTo((int)(Math.random()*50),  (int)(Math.random()*50));
+            SearchForFoodAndWater();
             isSleeping = true;
         }
     }
@@ -97,10 +116,82 @@ public class Herd<T extends Animal> {
         }
     }
 
+    private boolean CanDrink() {
+        for (T animal : animalList) {
+            if (animal.getCurrentX() + 1 < 50
+                && landscapeList.get(animal.getCurrentX() + 1).get(animal.getCurrentY()) instanceof Water) {
+                    return true;
+            }
+            if (animal.getCurrentX() - 1 >= 0
+                && landscapeList.get(animal.getCurrentX() - 1).get(animal.getCurrentY()) instanceof Water) {
+                    return true;
+            }
+            if (animal.getCurrentY() + 1 < 50
+                && landscapeList.get(animal.getCurrentX()).get(animal.getCurrentY() + 1) instanceof Water) {
+                    return true;
+            }
+            if (animal.getCurrentY() - 1 >= 0
+                && landscapeList.get(animal.getCurrentX()).get(animal.getCurrentY() - 1) instanceof Water) {
+                    return true;
+            }
+            return false;
+        }
+        return false;
+    }
+
+    private boolean in_range(int x, int y) {
+        int xDiff, yDiff;
+        for (T animal : animalList) {
+            xDiff = animal.getCurrentX() - x;
+            yDiff = animal.getCurrentY() - y;
+            if (xDiff*xDiff + yDiff*yDiff <= animal.getVisionRadius()*animal.getVisionRadius()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean InsideMap(int x, int y) {
+        return x >= 0 && x < 50 && y >= 0 && y < 50;
+    }
+
     private void SearchForFoodAndWater() {
        if (thirsty) {
+           if (CanDrink()){
+               thirstMeter = 100;
+                thirsty = false;
+                for (T animal : animalList) {
+                     if (landscapeList.get(animal.getCurrentX()).get(animal.getCurrentY()) instanceof Water) {
+                          animal.Drink();
+                          return;
+                     }
+                }
+           }
            if (discoveredWaterLocation != null){
-               MoveTo(discoveredWaterLocation[0], discoveredWaterLocation[1]);
+               if (!in_range(discoveredWaterLocation[0], discoveredWaterLocation[1])) {
+                   MoveTo(discoveredWaterLocation[0], discoveredWaterLocation[1]);
+                   return;
+               } else if (in_range(discoveredWaterLocation[0], discoveredWaterLocation[1])
+                       && !(landscapeList.get(discoveredWaterLocation[0]).get(discoveredWaterLocation[1]) instanceof Water)) {
+                   discoveredWaterLocation = null;
+               } else if (in_range(discoveredWaterLocation[0], discoveredWaterLocation[1])
+                       && landscapeList.get(discoveredWaterLocation[0]).get(discoveredWaterLocation[1]) instanceof Water) {
+                    MoveTo(discoveredWaterLocation[0], discoveredWaterLocation[1]);
+                    return;
+               }
+           }
+           for (T animal : animalList) {
+               for (int i = -animal.getVisionRadius(); i <= animal.getVisionRadius(); i++) {
+                   for (int j = -animal.getVisionRadius(); j <= animal.getVisionRadius(); j++) {
+                       if (InsideMap(animal.getCurrentX()+i, animal.getCurrentY()+j)
+                               && in_range(animal.getCurrentX() + i, animal.getCurrentY() + j)
+                               && landscapeList.get(animal.getCurrentX() + i).get(animal.getCurrentY() + j) instanceof Water) {
+                           discoveredWaterLocation = new int[]{animal.getCurrentX() + i, animal.getCurrentY() + j};
+                           MoveTo(discoveredWaterLocation[0], discoveredWaterLocation[1]);
+                           return;
+                       }
+                   }
+               }
 
            }
         }
