@@ -5,9 +5,6 @@ import java.util.ArrayList;
 
 public class Safari {
     List<Animal> AnimalList;
-    //private int difficultyLevel;   //all of these attributes are in the game section
-    //private int speedMode;
-    //private String startingDate;
     private List<Jeep> jeeps;
     private List<Poacher> poachers;
     private List<Ranger> rangers;
@@ -21,9 +18,7 @@ public class Safari {
     private List<Object> animals;
     private List<List<Landscape>> landscapes;
     public Safari(int difficultyLevel, int speedMode, String startingDate) {
-        //this.difficultyLevel = difficultyLevel;
-        //this.speedMode = speedMode;
-        //this.startingDate = startingDate;
+
         this.jeeps = new ArrayList<>();
         this.AnimalList = new ArrayList<>();
         this.poachers = new ArrayList<>();
@@ -107,18 +102,6 @@ public class Safari {
 
     public void setJeepList(List<Jeep> jeeps) {this.jeeps = jeeps;}
 
-    /*
-    public int getSpeedMode() { return speedMode;}
-
-    public void setSpeedMode(int speedMode) { this.speedMode = speedMode;}
-
-    public String getDate() { return startingDate; }
-
-    public void setDate(String date) { this.startingDate = date;}
-
-    public void FastForward(String action) { System.out.println("Fast forwarding: " + action);}
-
-     */
     Animal createAnimalInstance(Animal animal) {
         switch (animal.getClass().getSimpleName()) {
             case "Elephant":
@@ -130,7 +113,7 @@ public class Safari {
             case "Sheep":
                 return new Sheep(animal.getId()*3, animal.getName()+animal.getId(), animal.isLeader(),animal.getCurrentX(),animal.getCurrentY());
             default:
-                throw new IllegalArgumentException("Unknown animal class: " + animal.getClass().getSimpleName());
+                return null; // Return null instead of throwing exception
         }
     }
     public boolean pointChecker(int x,int y){

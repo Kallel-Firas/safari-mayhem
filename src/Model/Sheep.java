@@ -5,7 +5,7 @@ public class Sheep extends Herbivorous {
         super(id, name,1, 0.35F/24, 0.2F/24, isLeader, 35*24, 25);
     }
     public Sheep(int id, String name, boolean isLeader, int currentX, int currentY) {
-        super(id, name, 1, 0.4F/24, 0.35F/24, isLeader, 100*24, 35);
+        super(id, name, 1, 0.35F/24, 0.35F/24, isLeader, 100*24, 35);
         this.setCurrentX(currentX);
         this.setCurrentY(currentY);
     }
