@@ -12,6 +12,7 @@ import Model.*;
 
 public class MiniMap extends JPanel {
     private List<List<Landscape>> terrain;
+    private List<Animal> entities;
     private Map<Object, BufferedImage> terrainImages;
     private final int miniMapResolution = 4; // Size of each tile in the minimap
     private boolean isOnRight = true;
@@ -20,6 +21,7 @@ public class MiniMap extends JPanel {
     private int viewportY;
     private int viewportWidth;
     private int viewportHeight;
+
 
     public MiniMap(Map<Object, BufferedImage> terrainImages, GameMap gameMap) {
         this.terrainImages = terrainImages;
@@ -37,26 +39,50 @@ public class MiniMap extends JPanel {
             }
         });
     }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (terrain == null) {
-            return;
-        }
+        if (terrain == null) return;
+
+        // Draw terrain first
         for (int x = 0; x < terrain.size(); x++) {
             for (int y = 0; y < terrain.get(x).size(); y++) {
                 Landscape currentTile = terrain.get(x).get(y);
                 BufferedImage image = terrainImages.get(currentTile.getClass());
-                g.drawImage(image, x * miniMapResolution, y * miniMapResolution, miniMapResolution, miniMapResolution, null);
+                g.drawImage(image, x * miniMapResolution, y * miniMapResolution,
+                        miniMapResolution, miniMapResolution, null);
             }
         }
+
+        // Draw entities
+        if (entities != null) {
+            for (Entity entity : entities) {
+                if (entity instanceof Animal) {
+                    g.setColor(getAnimalColor((Animal)entity));
+                    g.fillRect(entity.getCurrentX() * miniMapResolution,
+                            entity.getCurrentY() * miniMapResolution,
+                            miniMapResolution, miniMapResolution);
+                }
+            }
+        }
+
+        // Draw viewport rectangle
         g.setColor(Color.RED);
-        g.drawRect(viewportX * miniMapResolution, viewportY * miniMapResolution, viewportWidth * miniMapResolution -1, viewportHeight * miniMapResolution -1);
+        g.drawRect(viewportX * miniMapResolution, viewportY * miniMapResolution,
+                viewportWidth * miniMapResolution - 1, viewportHeight * miniMapResolution - 1);
     }
 
-    public void update(List<List<Landscape>> terrain) {
+    private Color getAnimalColor(Animal animal) {
+        if (animal instanceof Elephant) return Color.GRAY;
+        if (animal instanceof Lion) return Color.YELLOW;
+        if (animal instanceof Cheetah) return Color.ORANGE;
+        if (animal instanceof Sheep) return Color.WHITE;
+        return Color.BLACK;
+    }
+
+    public void update(List<List<Landscape>> terrain, List<Animal> entities) {
         this.terrain = terrain;
+        this.entities = entities;
         repaint();
     }
 

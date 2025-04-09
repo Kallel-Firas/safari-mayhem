@@ -19,6 +19,7 @@ public class GameScreen extends JFrame {
     GameMap gameMap;
     MiniMap miniMap;
     Safari safari = new Safari(1, 1, "1/1/2021");
+
     public GameScreen() {
 
 
@@ -46,7 +47,7 @@ public class GameScreen extends JFrame {
     public void run() {
         safari.Update();
         gameMap.update(safari.getLandscapes(), safari.getEntities());
-        miniMap.update(safari.getLandscapes());
+        miniMap.update(safari.getLandscapes(),safari.getAnimalList());
         gameMap.repaint();
     }
 }

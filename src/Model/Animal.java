@@ -3,49 +3,33 @@ package Model;
 import java.util.List;
 
 public abstract class Animal extends Entity {
-    private String name;
+    // Basic properties
     private int id;
+    private String name;
     private int age;
-    private float hunger_change;
-    private float thirst_change;
-    private boolean isLeader = false;
-    private boolean canReproduce = true;
-    private int hunger_meter;
-    private int thirst_meter;
-    private int lifespan;
-    private int groupSize;
-    private int visionRadius;
-    private List<int[]> water_locations;
-    private List<int[]> food_locations;
     private boolean alive = true;
-    private int currentX, currentY;
+    private int lifespan;
+    private boolean isLeader = false;
+
+    // Movement and vision properties
+
+    private int visionRadius;
+    private int groupSize;
     public List<int[]> blockList;
 
-    public int getCurrentX() {
-        return currentX;
-    }
+    // Resource tracking
+    private List<int[]> water_locations;
+    private List<int[]> food_locations;
 
-    public int getCurrentY() {
-        return currentY;
-    }
-
-    public void setCurrentY(int currentY) {
-        this.currentY = currentY;
-    }
-
-    public void setCurrentX(int currentX) {
-        this.currentX = currentX;
-    }
-
-    public boolean isCanReproduce() {
-        return canReproduce;
-    }
-
-    public void setCanReproduce(boolean canReproduce) {
-        this.canReproduce = canReproduce;
-    }
+    // Needs properties
+    int hunger_meter;
+    int thirst_meter;
+    private float hunger_change;
+    private float thirst_change;
+    private boolean canReproduce = true;
 
     public Animal(int id, String name, int age, float hunger_change, float thirst_change, boolean isLeader, int lifespan, int visionRadius) {
+
         this.id = id;
         this.name = name;
         this.age = age;
@@ -54,6 +38,51 @@ public abstract class Animal extends Entity {
         this.isLeader = isLeader;
         this.lifespan = lifespan;
         this.visionRadius = visionRadius;
+
+    }
+
+    // Core methods
+    public void Update() {
+        setAge(getAge()+1);
+        if(age>=lifespan|| thirst_meter>=100 || hunger_meter>=100) {
+            alive = false;
+        }
+    }
+
+    public void Move(int x, int y,List<int[]> blockList) {  //  removed the merge and added the list to the parameter blockList
+        for( int[] block : blockList) {
+            //here we should but the graphic part where the animal moves to this block
+        }
+        setCurrentX(x);
+        setCurrentY(y);
+    }
+
+    public void Eat() {
+        this.hunger_meter=0;
+    }
+
+    public void Sleep() {
+        // sleep method makes the animal do the sleep animation
+    }
+
+    public void Drink() {
+        this.thirst_meter = 0;
+    }
+
+    public boolean Search(String target) {
+        return false;
+    }
+
+    public boolean Reproduce(Animal partner) {
+        return false;
+    }
+
+
+
+
+    // Getters and setters for basic properties
+    public int getId() {
+        return id;
     }
 
     public String getName() {
@@ -68,44 +97,19 @@ public abstract class Animal extends Entity {
         this.age = age;
     }
 
-    public float getHungerChange() {
-        return hunger_change;
+    public boolean isAlive() {
+        return alive;
     }
 
-    public void setHungerChange(float hunger_change) {
-
-        if (this.age > 2) {
-            this.hunger_change = hunger_change * 2;
-        } else {
-            this.hunger_change = hunger_change;
-        }
-
-    }
-
-    public float getThirstChange() {
-        return thirst_change;
-    }
-
-    public void setThirstChange(float thirst_change) {
-        if (this.age > 2) {
-            this.thirst_change = thirst_change * 2;
-        } else {
-            this.thirst_change = thirst_change;
-        }
-    }
-
-    public int getVisionRadius() {
-        return visionRadius;
-    }
-
-    public void setVisionRadius(int visionRadius) {
-        this.visionRadius = visionRadius;
+    public boolean isLeader() {
+        return isLeader;
     }
 
     public void setLeader(boolean isLeader) {
         this.isLeader = isLeader;
     }
 
+    // Getters and setters for needs
     public int getHungerMeter() {
         return hunger_meter;
     }
@@ -122,57 +126,44 @@ public abstract class Animal extends Entity {
         this.thirst_meter = thirst_meter;
     }
 
-    public void Eat() {
-        this.hunger_meter=0;
-
+    public float getHungerChange() {
+        return hunger_change;
     }
 
-    public void Sleep() {
-        // sleep method makes the animal do the sleep animation
-    }
-
-    public void Move(int x, int y,List<int[]> blockList) {  //  removed the merge and added the list to the parameter blockList
-        for( int[] block : blockList) {
-            //here we should but the graphic part where the animal moves to this block
+    public void setHungerChange(float hunger_change) {
+        if (this.age > 2) {
+            this.hunger_change = hunger_change * 2;
+        } else {
+            this.hunger_change = hunger_change;
         }
-        setCurrentX(x);
-        setCurrentY(y);
     }
 
-    public void Drink() {
-        this.thirst_meter = 0;
+    public float getThirstChange() {
+        return thirst_change;
     }
 
-    public boolean Reproduce(Animal partner) {
-
-        return false;
-    }
-
-    public boolean isAlive() {
-        return alive;
-    }
-
-    public void Update() {
-        setAge(getAge()+1);
-        setHungerMeter(getHungerMeter() + (int)(100*getHungerChange()));
-        setThirstMeter(getThirstMeter() +  (int)(100*getHungerChange()));
-
-        if(age>=lifespan) {
-            alive = false;
+    public void setThirstChange(float thirst_change) {
+        if (this.age > 2) {
+            this.thirst_change = thirst_change * 2;
+        } else {
+            this.thirst_change = thirst_change;
         }
-
-
     }
 
-    public boolean Search(String target) {
-        return false;
+    // Getters and setters for other properties
+    public int getVisionRadius() {
+        return visionRadius;
     }
 
-    public int getId() {
-        return id;
+    public void setVisionRadius(int visionRadius) {
+        this.visionRadius = visionRadius;
     }
 
-    public boolean isLeader() {
-        return isLeader;
+    public boolean isCanReproduce() {
+        return canReproduce;
+    }
+
+    public void setCanReproduce(boolean canReproduce) {
+        this.canReproduce = canReproduce;
     }
 }

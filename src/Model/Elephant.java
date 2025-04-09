@@ -11,23 +11,20 @@ public class Elephant extends Herbivorous {
        this.setCurrentY(currentY);
     }
 
-    public boolean Eat(int x, int y) {
-        return false;
-    }
-
     public void Sleep() {
     }
 
+    public void Eat() {
+        this.hunger_meter=0;
+    }
     public void Drink() {
+        this.thirst_meter = 0;
     }
 
+
     public boolean Reproduce(Animal partner) {// edited the Reporduce method to
-        //to make it that if both animals are above a certain age they can reproduce
-
-        if(getAge()>24*20 && partner.getAge()>24*20& isCanReproduce() & partner.isCanReproduce()){
+        if(getAge()>24*20 && partner.getAge()>24*20& isCanReproduce() & partner.isCanReproduce())
             return partner instanceof Elephant;
-
-        }
         return false;
     }
 }

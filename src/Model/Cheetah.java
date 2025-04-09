@@ -2,7 +2,6 @@ package Model;
 
 public class Cheetah extends Carnivorous {
 
-
     public Cheetah(int id, String name, boolean isLeader) {
         super(id, name, 1, 0.2F/24, 0.3F/24, isLeader, 70*24, 99);
     }
@@ -11,15 +10,17 @@ public class Cheetah extends Carnivorous {
         this.setCurrentX(currentX);
         this.setCurrentY(currentY);
     }
-    public boolean Eat(int x, int y) {
-        return false;
-    }
-
     public void Sleep() {
     }
 
-    public void Drink() {
+
+    public void Eat() {
+        this.hunger_meter=0;
     }
+    public void Drink() {
+        super.thirst_meter = 0;
+    }
+
 
     public boolean Reproduce(Animal partner) { // edited the Reporduce method to
         //to make it that if both animals are above a certain age they can reproduce

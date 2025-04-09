@@ -12,8 +12,8 @@ public class Grass extends Vegetation {
     public int getFoodLeft() {
         return food_left;
     }
-
-    public void setFoodLeft(int food_left,int change) {
-        this.food_left = food_left+change;
+    public void setFoodLeft(int change) {
+        this.food_left += change;
     }
+
 }

@@ -10,22 +10,20 @@ public class Lion extends Carnivorous {
         this.setCurrentX(currentX);
         this.setCurrentY(currentY);
     }
-    public boolean Eat(int x, int y) {
-        return false;
-    }
-
     public void Sleep() {
     }
 
+    public void Eat() {
+        this.hunger_meter=0;
+    }
     public void Drink() {
+        this.thirst_meter = 0;
     }
 
     public boolean Reproduce(Animal partner) {// edited the Reporduce method to
         //to make it that if both animals are above a certain age they can reproduce
-
-        if(getAge()>24*25 && partner.getAge()>24*25 & isCanReproduce() & partner.isCanReproduce()){
+        if(getAge()>24*25 && partner.getAge()>24*25 & isCanReproduce() & partner.isCanReproduce())
             return partner instanceof Lion;
-        }
         return false;
     }
 }

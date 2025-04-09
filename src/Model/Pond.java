@@ -11,7 +11,8 @@ public class Pond extends WaterSource {
         return price;
     }
 
-    public Pond(int radius) {
+    public Pond(int x, int y,int radius) {
+        super(x,y,radius);
         if (radius < 8) {
             this.price = (int) Math.pow(radius, 5);
         } else {
