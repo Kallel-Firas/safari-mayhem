@@ -27,7 +27,8 @@ public class Road extends Land {
         return exit;
     }
 
-    public Road(boolean entrance, boolean exit) {
+    public Road(int x, int y, boolean entrance, boolean exit) {
+        super(x,y);
         this.entrance = entrance;
         this.exit = exit;
     }

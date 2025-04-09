@@ -16,7 +16,7 @@ public class MiniMap extends JPanel {
     private Map<Object, BufferedImage> terrainImages;
     private final int miniMapResolution = 4; // Size of each tile in the minimap
     private boolean isOnRight = true;
-    private GameMap gameMap;
+    private final GameMap gameMap;
     private int viewportX;
     private int viewportY;
     private int viewportWidth;
