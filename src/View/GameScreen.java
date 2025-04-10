@@ -84,7 +84,9 @@ public class GameScreen extends JFrame {
     }
 
     private void placeItem(int x, int y) {
-        if (selectedItem == null) return;
+        if (selectedItem == null || selectedItemType == null) return;
+
+        System.out.println("Attempting to place " + selectedItemType + ": " + selectedItem + " at (" + x + "," + y + ")");
 
         // First check if coordinates are valid
         if (x < 0 || x >= safari.getLandscapes().size() || 
@@ -105,67 +107,82 @@ public class GameScreen extends JFrame {
                     vegetation.getCurrentY() == y && 
                     (vegetation instanceof Tree || vegetation instanceof Bush));
 
+        // Check if the position is water
         boolean isWater = safari.getLandscapes().get(x).get(y) instanceof Water;
 
-        if (isOccupiedByAnimal || hasVegetation || isWater) {
-            String errorMessage = "Cannot place " + selectedItem + " here!\n";
-            if (isOccupiedByAnimal) {
-                errorMessage += "Position is occupied by another animal.";
-            } else if (hasVegetation) {
-                errorMessage += "Position has vegetation (tree/bush).";
-            } else if (isWater) {
-                errorMessage += "Cannot place animals on water.";
+        // Only check placement restrictions for animals
+        if (selectedItemType.equals("animal")) {
+            if (isOccupiedByAnimal || hasVegetation || isWater) {
+                String errorMessage = "Cannot place " + selectedItem + " here!\n";
+                if (isOccupiedByAnimal) {
+                    errorMessage += "Position is occupied by another animal.";
+                } else if (hasVegetation) {
+                    errorMessage += "Position has vegetation (tree/bush).";
+                } else if (isWater) {
+                    errorMessage += "Cannot place animals on water.";
+                }
+                
+                refundPurchase();
+                showPlacementError(errorMessage);
+                return;
             }
-            
+        }
+
+        // If we get here, proceed with placement
+        try {
+            switch (selectedItemType) {
+                case "animal":
+                    switch (selectedItem) {
+                        case "Cheetah":
+                            safari.addAnimal(new Cheetah(safari.getNextAnimalId(), "Cheetah", false, x, y));
+                            break;
+                        case "Lion":
+                            safari.addAnimal(new Lion(safari.getNextAnimalId(), "Lion", false, x, y));
+                            break;
+                        case "Elephant":
+                            safari.addAnimal(new Elephant(safari.getNextAnimalId(), "Elephant", false, x, y));
+                            break;
+                        case "Sheep":
+                            safari.addAnimal(new Sheep(safari.getNextAnimalId(), "Sheep", false, x, y));
+                            break;
+                    }
+                    System.out.println("Animal placed successfully");
+                    break;
+                case "plant":
+                    switch (selectedItem) {
+                        case "Grass":
+                            safari.addVegetation(new Grass(x, y));
+                            break;
+                        case "Tree":
+                            safari.addVegetation(new Tree(x, y));
+                            break;
+                        case "Bush":
+                            safari.addVegetation(new Bush(x, y));
+                            break;
+                        case "Water":
+                            safari.setLandscape(x, y, new Water(x, y, 1));
+                            break;
+                        case "Dirt":
+                            safari.setLandscape(x, y, new Dirt(x, y));
+                            break;
+                    }
+                    System.out.println("Plant/landscape placed successfully");
+                    break;
+            }
+
+            // Reset selection and update display
+            selectedItem = null;
+            selectedItemType = null;
+            setCursor(Cursor.getDefaultCursor());
+            gameMap.repaint();
+            miniMap.repaint();
+
+        } catch (Exception e) {
+            System.out.println("Error placing item: " + e.getMessage());
+            e.printStackTrace();
             refundPurchase();
-            showPlacementError(errorMessage);
-            return;
+            showPlacementError("Error placing item: " + e.getMessage());
         }
-
-        // If we get here, the position is valid, proceed with placement
-        switch (selectedItemType) {
-            case "animal":
-                switch (selectedItem) {
-                    case "Cheetah":
-                        safari.addAnimal(new Cheetah(0, "Cheetah", false, x, y));
-                        break;
-                    case "Lion":
-                        safari.addAnimal(new Lion(0, "Lion", false, x, y));
-                        break;
-                    case "Elephant":
-                        safari.addAnimal(new Elephant(0, "Elephant", false, x, y));
-                        break;
-                    case "Sheep":
-                        safari.addAnimal(new Sheep(0, "Sheep", false, x, y));
-                        break;
-                }
-                break;
-            case "plant":
-                switch (selectedItem) {
-                    case "Grass":
-                        safari.addVegetation(new Grass(x, y));
-                        break;
-                    case "Tree":
-                        safari.addVegetation(new Tree(x, y));
-                        break;
-                    case "Bush":
-                        safari.addVegetation(new Bush(x, y));
-                        break;
-                    case "Water":
-                        safari.setLandscape(x, y, new Water(x, y, 1));
-                        break;
-                    case "Dirt":
-                        safari.setLandscape(x, y, new Dirt(x, y));
-                        break;
-                }
-                break;
-        }
-
-        // Reset selection and update display
-        selectedItem = null;
-        selectedItemType = null;
-        setCursor(Cursor.getDefaultCursor());
-        gameMap.repaint();
     }
 
     private void refundPurchase() {
@@ -175,6 +192,11 @@ public class GameScreen extends JFrame {
             case "Lion": refundAmount = 600; break;
             case "Elephant": refundAmount = 800; break;
             case "Sheep": refundAmount = 200; break;
+            case "Tree": refundAmount = 100; break;
+            case "Bush": refundAmount = 75; break;
+            case "Grass": refundAmount = 50; break;
+            case "Water": refundAmount = 200; break;
+            case "Dirt": refundAmount = 20; break;
         }
         balance += refundAmount;
         balanceLabel.setText("Balance: $" + balance);

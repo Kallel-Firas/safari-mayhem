@@ -334,7 +334,7 @@ public class Safari {
     }
 
     private int nextAnimalId = 1;
-    private int getNextAnimalId() {
+    public int getNextAnimalId() {
         return nextAnimalId++;
     }
 
