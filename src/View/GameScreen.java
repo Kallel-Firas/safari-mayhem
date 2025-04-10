@@ -86,6 +86,43 @@ public class GameScreen extends JFrame {
     private void placeItem(int x, int y) {
         if (selectedItem == null) return;
 
+        // First check if coordinates are valid
+        if (x < 0 || x >= safari.getLandscapes().size() || 
+            y < 0 || y >= safari.getLandscapes().get(0).size()) {
+            showPlacementError("Invalid coordinates");
+            return;
+        }
+
+        // Check if the position is already occupied by an animal
+        boolean isOccupiedByAnimal = safari.getAnimalList().stream()
+                .anyMatch(animal -> animal.getCurrentX() == x && animal.getCurrentY() == y);
+
+        // Check if the position has vegetation (tree or bush)
+        boolean hasVegetation = safari.getEntities().stream()
+                .filter(entity -> entity instanceof Vegetation)
+                .anyMatch(vegetation -> 
+                    vegetation.getCurrentX() == x && 
+                    vegetation.getCurrentY() == y && 
+                    (vegetation instanceof Tree || vegetation instanceof Bush));
+
+        boolean isWater = safari.getLandscapes().get(x).get(y) instanceof Water;
+
+        if (isOccupiedByAnimal || hasVegetation || isWater) {
+            String errorMessage = "Cannot place " + selectedItem + " here!\n";
+            if (isOccupiedByAnimal) {
+                errorMessage += "Position is occupied by another animal.";
+            } else if (hasVegetation) {
+                errorMessage += "Position has vegetation (tree/bush).";
+            } else if (isWater) {
+                errorMessage += "Cannot place animals on water.";
+            }
+            
+            refundPurchase();
+            showPlacementError(errorMessage);
+            return;
+        }
+
+        // If we get here, the position is valid, proceed with placement
         switch (selectedItemType) {
             case "animal":
                 switch (selectedItem) {
@@ -129,6 +166,30 @@ public class GameScreen extends JFrame {
         selectedItemType = null;
         setCursor(Cursor.getDefaultCursor());
         gameMap.repaint();
+    }
+
+    private void refundPurchase() {
+        int refundAmount = 0;
+        switch (selectedItem) {
+            case "Cheetah": refundAmount = 500; break;
+            case "Lion": refundAmount = 600; break;
+            case "Elephant": refundAmount = 800; break;
+            case "Sheep": refundAmount = 200; break;
+        }
+        balance += refundAmount;
+        balanceLabel.setText("Balance: $" + balance);
+    }
+
+    private void showPlacementError(String message) {
+        JOptionPane.showMessageDialog(this,
+                message,
+                "Invalid Placement",
+                JOptionPane.ERROR_MESSAGE);
+
+        // Reset selection
+        selectedItem = null;
+        selectedItemType = null;
+        setCursor(Cursor.getDefaultCursor());
     }
 
     private void createShopDialog() {
