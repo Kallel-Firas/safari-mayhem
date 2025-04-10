@@ -9,16 +9,14 @@ public class Game {
     private Calendar calendar;
     private int days;
     private int hour;
-    final Calendar StartingDate  ;
+    final Calendar StartingDate;
     Random random = new Random();
 
     final Difficulty difficulty;
     Safari safari;
     public Game(Difficulty difficulty,Safari safari) {
-        // Initialize the calendar with today's date
         this.calendar =this.StartingDate= Calendar.getInstance();
         this.days = 0;
-        //setting the difficulty
         this.difficulty = difficulty;
         this.safari=safari;
     }
@@ -49,7 +47,7 @@ public class Game {
 
     public boolean gameOver() {
         int monthsPassed = calendar.get(Calendar.MONTH) - StartingDate.get(Calendar.MONTH)
-                           + (calendar.get(Calendar.YEAR) - StartingDate.get(Calendar.YEAR)) * 12;
+                + (calendar.get(Calendar.YEAR) - StartingDate.get(Calendar.YEAR)) * 12;
 
         switch (difficulty) {
             case EASY:
@@ -66,22 +64,17 @@ public class Game {
         int hoursPassed = 0;
 
         while (!gameOver()) {
-            // Wait for 15 seconds
             Timer timer = new Timer(15000, null);
-            // Fast forward one hour
             FastForward(1);
             hoursPassed++;
 
-            // Check if a full day has passed
             if (hoursPassed >= 24) {
                 hoursPassed = 0;
 
-                // Update each animal's state
                 for (Animal animal : safari.getAnimalList()) {
                     // Increment age
                     animal.setAge(animal.getAge() + 1);
 
-                    // Increase hunger and thirst levels
                     animal.setHungerMeter(animal.getHungerMeter() + (int)(100*animal.getHungerChange()));
                     animal.setThirstMeter(animal.getThirstMeter() +  (int)(100*animal.getHungerChange()));
 
@@ -92,9 +85,9 @@ public class Game {
                         } else {
                             // Move closer to food
                             List<int[]> pathToFood = ShortestPath.findShortestPath(
-                                safari.getLandscapes(),
-                                new int[]{animal.getCurrentX(), animal.getCurrentY()},
-                                new int[]{/* coordinates of the nearest food source */}
+                                    safari.getLandscapes(),
+                                    new int[]{animal.getCurrentX(), animal.getCurrentY()},
+                                    new int[]{/* coordinates of the nearest food source */}
                             );
                             if (!pathToFood.isEmpty()) {
                                 animal.Move(pathToFood.get(0)[0], pathToFood.get(0)[1], pathToFood);
@@ -162,21 +155,5 @@ public class Game {
         */
     }
 
-    // Getters and setters for calendar
-    public Calendar getCalendar() {
-        return calendar;
-    }
 
-    public void setCalendar(Calendar calendar) {
-        this.calendar = calendar;
-    }
-
-    // Getters and setters for days
-    public int getDays() {
-        return days;
-    }
-
-    public void setDays(int days) {
-        this.days = days;
-    }
 }

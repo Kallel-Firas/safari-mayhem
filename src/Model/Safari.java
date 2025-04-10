@@ -4,14 +4,12 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class Safari {
-    // Lists of entities
     private List<Herd> herdList;
     private List<Jeep> jeeps;
     private List<Poacher> poachers;
     private List<Ranger> rangers;
     private List<Vegetation> vegetationList;
 
-    // Map related
     private List<List<Landscape>> landscapes;
     private List<int[]> blockList;
 
@@ -22,7 +20,6 @@ public class Safari {
         addVegetation();
     }
 
-    // Initialization methods
     private void initializeLists() {
         jeeps = new ArrayList<>();
         herdList = new ArrayList<>();
@@ -320,4 +317,34 @@ public class Safari {
     public void setPoacherList(List<Poacher> poachers) { this.poachers = poachers; }
     public void setJeepList(List<Jeep> jeeps) { this.jeeps = jeeps; }
     public void UpdateSafari() { }
+
+    public void addAnimal(Animal animal) {
+        // Find the appropriate herd for this animal type
+        for (Herd herd : herdList) {
+            if (herd.getAnimalList().isEmpty() ||
+                    herd.getAnimalList().get(0).getClass() == animal.getClass()) {
+                herd.getAnimalList().add(animal);
+                return;
+            }
+        }
+        // If no matching herd found, create a new one
+        Herd newHerd = new Herd<>(landscapes);
+        newHerd.getAnimalList().add(animal);
+        herdList.add(newHerd);
+    }
+
+    private int nextAnimalId = 1;
+    private int getNextAnimalId() {
+        return nextAnimalId++;
+    }
+
+    public void addVegetation(Vegetation vegetation) {
+        vegetationList.add(vegetation);
+    }
+
+    public void setLandscape(int x, int y, Landscape landscape) {
+        if (x >= 0 && x < landscapes.size() && y >= 0 && y < landscapes.get(0).size()) {
+            landscapes.get(x).set(y, landscape);
+        }
+    }
 }
