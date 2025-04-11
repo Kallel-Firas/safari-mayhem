@@ -10,6 +10,10 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import java.awt.event.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.Iterator;
 
 public class GameScreen extends JFrame {
     GameMap gameMap;
@@ -23,10 +27,16 @@ public class GameScreen extends JFrame {
     private int balance = 1000; // Starting balance
     private String selectedItem = null;
     private String selectedItemType = null;
+    private Timer gameLogicTimer;
+    private Timer renderTimer;
+    private Map<Class<? extends Animal>, BufferedImage> animalImages = new HashMap<>();
 
     public GameScreen() {
         setTitle("Safari Mayhem");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Load animal images once
+        loadAnimalImages();
 
         // Create layered pane for managing components
         layeredPane = new JLayeredPane();
@@ -34,14 +44,15 @@ public class GameScreen extends JFrame {
         setContentPane(layeredPane);
 
         // Setup game map (bottom layer)
-        gameMap = new GameMap();
+        gameMap = new GameMap(this.safari);
         gameMap.setBounds(0, 0, 800, 800);
         gameMap.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (selectedItem != null) {
-                    int tileX = e.getX() / 32; // Assuming tile size is 32
-                    int tileY = e.getY() / 32;
+                    // Calculate tile coordinates considering viewport offset
+                    int tileX = (e.getX() / 32) + gameMap.getViewportX();
+                    int tileY = (e.getY() / 32) + gameMap.getViewportY();
                     placeItem(tileX, tileY);
                 }
             }
@@ -80,7 +91,26 @@ public class GameScreen extends JFrame {
         // Add shop button action listener
         shopButton.addActionListener(e -> shopDialog.setVisible(true));
 
+        // Initialize game logic timer for normal time progression
+        gameLogicTimer = new Timer(1000, e -> updateGameState());
+        gameLogicTimer.start();
+
+        // Initialize render timer for smoother animations
+        renderTimer = new Timer(1000 / 60, e -> repaint());
+        renderTimer.start();
+
         pack();
+    }
+
+    private void loadAnimalImages() {
+        try {
+            animalImages.put(Elephant.class, ImageIO.read(new File("resources/elephant.png")));
+            animalImages.put(Lion.class, ImageIO.read(new File("resources/lion.png")));
+            animalImages.put(Cheetah.class, ImageIO.read(new File("resources/cheetah.png")));
+            animalImages.put(Sheep.class, ImageIO.read(new File("resources/sheep.png")));
+        } catch (IOException e) {
+            System.out.println("Error loading animal images: " + e.getMessage());
+        }
     }
 
     private void placeItem(int x, int y) {
@@ -377,5 +407,114 @@ public class GameScreen extends JFrame {
         }
 
         timeLabel.setText(String.format("Day %d, %02d:00", day, hour));
+    }
+
+    private void drawRangers(Graphics g) {
+        for (Ranger ranger : safari.getRangers()) {
+            int x = ranger.getCurrentX() * 32; // Assuming tile size is 32
+            int y = ranger.getCurrentY() * 32;
+            g.setColor(Color.BLUE);
+            g.fillRect(x, y, 32, 32);
+            g.setColor(Color.BLACK);
+            g.drawString("R", x + 12, y + 20);
+        }
+    }
+
+    private void drawAnimals(Graphics g) {
+        for (Animal animal : safari.getAnimalList()) {
+            int x = animal.getCurrentX() * 32;
+            int y = animal.getCurrentY() * 32;
+            
+        }
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+        drawRangers(g);
+        drawAnimals(g);
+    }
+
+    private void updateGameState() {
+        // Increment time
+        String currentTime = timeLabel.getText();
+        String[] parts = currentTime.split(", ");
+        String[] dayPart = parts[0].split(" ");
+        String[] timePart = parts[1].split(":");
+
+        int day = Integer.parseInt(dayPart[1]);
+        int hour = Integer.parseInt(timePart[0]);
+
+        hour++;
+        if (hour >= 24) {
+            hour = 0;
+            day++;
+            // Add daily capital at the start of each new day
+            balance += 500;
+            balanceLabel.setText("Balance: $" + balance);
+        }
+
+        // Spawn poacher every 8 hours
+        if (hour % 8 == 0) {
+            spawnPoachers();
+        }
+
+        // Update poachers and remove those that have been present for 6 hours without success
+        boolean poachersRemoved = false;
+        Iterator<Poacher> iterator = safari.getPoachers().iterator();
+        while (iterator.hasNext()) {
+            Poacher poacher = iterator.next();
+            poacher.update(safari);
+            if (poacher.hasCapturedAnimal() || poacher.getTimePresent() >= 6) {
+                iterator.remove();
+                poachersRemoved = true;
+            }
+        }
+
+        // If poachers were removed, update the map display
+        if (poachersRemoved) {
+            gameMap.repaint();
+            miniMap.repaint();
+        }
+
+        timeLabel.setText(String.format("Day %d, %02d:00", day, hour));
+    }
+
+    private void spawnPoachers() {
+        Random random = new Random();
+        int numPoachers = random.nextInt(3) + 1; // 1-3 poachers
+        
+        for (int i = 0; i < numPoachers; i++) {
+            int x, y;
+            boolean validPosition = false;
+            int attempts = 0;
+            
+            // Try to find a valid position (max 10 attempts)
+            while (!validPosition && attempts < 10) {
+                x = random.nextInt(safari.getLandscapes().size());
+                y = random.nextInt(safari.getLandscapes().get(0).size());
+                
+                // Check if position is valid (not water, not occupied by animals, not occupied by vegetation)
+                if (!(safari.getLandscapes().get(x).get(y) instanceof Water) &&
+                    !safari.getAnimalList().stream().anyMatch(a -> a.getCurrentX() == x && a.getCurrentY() == y) &&
+                    !safari.getVegetationList().stream().anyMatch(v -> v.getCurrentX() == x && v.getCurrentY() == y)) {
+                    
+                    // Check if there are any rangers nearby (within 5 tiles)
+                    boolean rangerNearby = safari.getRangers().stream()
+                        .anyMatch(r -> Math.abs(r.getCurrentX() - x) <= 5 && Math.abs(r.getCurrentY() - y) <= 5);
+                    
+                    if (!rangerNearby) {
+                        Poacher poacher = new Poacher(x, y);
+                        safari.addPoacher(poacher);
+                        validPosition = true;
+                    }
+                }
+                attempts++;
+            }
+        }
+    }
+
+    public Safari getSafari() {
+        return safari;
     }
 }

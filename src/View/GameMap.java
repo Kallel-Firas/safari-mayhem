@@ -42,11 +42,13 @@ public class GameMap extends JPanel implements MouseWheelListener {
 
     private MiniMap miniMap;
 
-    public void setMiniMap(MiniMap miniMap) {
-        this.miniMap = miniMap;
-    }
+    private Safari safari;
 
-    public GameMap() {
+    private BufferedImage poacherImage;
+    private BufferedImage rangerImage;
+
+    public GameMap(Safari safari) {
+        this.safari = safari;
         try {
             terrainImages.put(Water.class, ImageIO.read(new File("resources/water.png")));
             // do like the line above for the following lines
@@ -63,9 +65,9 @@ public class GameMap extends JPanel implements MouseWheelListener {
             //entityImages.put(BabyElephant.class, ImageIO.read(new File("resources/baby_elephant.png")));
             entityImages.put(Lion.class, ImageIO.read(new File("resources/lion.png")));
             //entityImages.put(BabyLion.class, ImageIO.read(new File("resources/baby_lion.png")));
+            entityImages.put(Poacher.class, ImageIO.read(new File("resources/poacher.png")));
+            entityImages.put(Ranger.class, ImageIO.read(new File("resources/ranger.png")));
 
-            //entityImages.put(Poacher.class, ImageIO.read(new File("resources/poacher.png")));
-            //entityImages.put(Ranger.class, ImageIO.read(new File("resources/ranger.png")));
             //entityImages.put(Jeep.class, ImageIO.read(new File("resources/jeep.png")));
 
         } catch (IOException e) {
@@ -121,19 +123,28 @@ public class GameMap extends JPanel implements MouseWheelListener {
                 g.drawImage(image, (x - viewportX) * textureResolution, (y - viewportY) * textureResolution, null);
             }
         }
+
+        // Draw entities (animals, poachers, rangers)
         for (Entity entity : entities) {
             BufferedImage image = entityImages.get(entity.getClass());
             int entityX = entity.getCurrentX();
             int entityY = entity.getCurrentY();
-            if (entityX >= viewportX && entityX < viewportX + viewportWidth && entityY >= viewportY && entityY < viewportY + viewportHeight) {
-                g.drawImage(image, (entityX - viewportX) * textureResolution, (entityY - viewportY) * textureResolution, null);
+            if (entityX >= viewportX && entityX < viewportX + viewportWidth && 
+                entityY >= viewportY && entityY < viewportY + viewportHeight) {
+                g.drawImage(image, (entityX - viewportX) * textureResolution, 
+                          (entityY - viewportY) * textureResolution, null);
             }
         }
-        for (Entity entity : entities) {
-            if (entity instanceof Vegetation) {
-                Vegetation vegetation = (Vegetation) entity;
-                BufferedImage image = terrainImages.get(vegetation.getClass());
-                g.drawImage(image, (vegetation.getCurrentX() - viewportX) * textureResolution, (vegetation.getCurrentY() - viewportY) * textureResolution, null);
+
+        // Draw vegetation
+        for (Vegetation vegetation : safari.getVegetationList()) {
+            BufferedImage image = terrainImages.get(vegetation.getClass());
+            int vegX = vegetation.getCurrentX();
+            int vegY = vegetation.getCurrentY();
+            if (vegX >= viewportX && vegX < viewportX + viewportWidth && 
+                vegY >= viewportY && vegY < viewportY + viewportHeight) {
+                g.drawImage(image, (vegX - viewportX) * textureResolution, 
+                          (vegY - viewportY) * textureResolution, null);
             }
         }
     }
@@ -172,4 +183,11 @@ public class GameMap extends JPanel implements MouseWheelListener {
         repaint();
     }
 
+    public Safari getSafari() {
+        return safari;
+    }
+
+    public void setMiniMap(MiniMap miniMap) {
+        this.miniMap = miniMap;
+    }
 }

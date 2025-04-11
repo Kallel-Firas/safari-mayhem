@@ -12,7 +12,7 @@ public class Game {
     final Calendar StartingDate;
     Random random = new Random();
 
-    final Difficulty difficulty;
+    private final Difficulty difficulty;
     Safari safari;
     public Game(Difficulty difficulty,Safari safari) {
         this.calendar =this.StartingDate= Calendar.getInstance();
@@ -60,6 +60,19 @@ public class Game {
                 return false;
         }
     }
+    private void payRangers() {
+        for (Ranger ranger : safari.getRangers()) {
+            ranger.paySalary();
+            // Deduct salary from player's funds
+        }
+    }
+
+    private void handleRangerPoacherInteractions() {
+        for (Ranger ranger : safari.getRangers()) {
+            ranger.protectFromPoachers(safari.getPoachers());
+        }
+    }
+
     public void gameloop() {
         int hoursPassed = 0;
 
@@ -70,6 +83,12 @@ public class Game {
 
             if (hoursPassed >= 24) {
                 hoursPassed = 0;
+
+                if (calendar.get(Calendar.DAY_OF_MONTH) == 1) {
+                    payRangers();
+                }
+
+                handleRangerPoacherInteractions();
 
                 for (Animal animal : safari.getAnimalList()) {
                     // Increment age
