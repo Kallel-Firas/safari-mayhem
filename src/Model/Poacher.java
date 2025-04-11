@@ -22,6 +22,13 @@ public class Poacher extends Entity {
         this.targetY = y;
     }
 
+    public void setEscaping(boolean escaping) {
+        this.isEscaping = escaping;
+        if (escaping) {
+            targetAnimal = null; // Stop hunting when escaping
+        }
+    }
+
     public void update(Safari safari) {
         if (isEscaping) {
             moveTowardsEdge(safari);
@@ -36,6 +43,16 @@ public class Poacher extends Entity {
                 return;
             }
 
+            // Check for nearby rangers
+            boolean rangerNearby = safari.getRangers().stream()
+                .anyMatch(r -> Math.abs(r.getCurrentX() - getCurrentX()) <= 5 && 
+                             Math.abs(r.getCurrentY() - getCurrentY()) <= 5);
+            
+            if (rangerNearby) {
+                isEscaping = true;
+                return;
+            }
+
             if (!hasCapturedAnimal) {
                 if (targetAnimal == null || !isInHuntingRange(targetAnimal)) {
                     findNewTarget(safari);
@@ -45,7 +62,6 @@ public class Poacher extends Entity {
                     moveTowardsTarget(safari);
                     attemptHunt(safari);
                 } else {
-                    // Wander around if no target found
                     wander(safari);
                 }
             }
@@ -80,7 +96,14 @@ public class Poacher extends Entity {
             float newX = getCurrentX() + dx * moveSpeed;
             float newY = getCurrentY() + dy * moveSpeed;
             
-            if (isValidPosition(safari, (int) newX, (int) newY)) {
+            // Try to move in both directions if one is blocked
+            if (!isValidPosition(safari, (int) newX, (int) newY)) {
+                if (isValidPosition(safari, (int) newX, getCurrentY())) {
+                    setCurrentX((int) newX);
+                } else if (isValidPosition(safari, getCurrentX(), (int) newY)) {
+                    setCurrentY((int) newY);
+                }
+            } else {
                 setCurrentX((int) newX);
                 setCurrentY((int) newY);
             }
@@ -138,7 +161,25 @@ public class Poacher extends Entity {
             y < 0 || y >= safari.getLandscapes().get(0).size()) {
             return false;
         }
-        return !(safari.getLandscapes().get(x).get(y) instanceof Water);
+        
+        // Check for water
+        if (safari.getLandscapes().get(x).get(y) instanceof Water) {
+            return false;
+        }
+        
+        // Check for vegetation
+        if (safari.getVegetationList().stream()
+            .anyMatch(v -> v.getCurrentX() == x && v.getCurrentY() == y)) {
+            return false;
+        }
+        
+        // Check for other poachers
+        if (safari.getPoachers().stream()
+            .anyMatch(p -> p != this && p.getCurrentX() == x && p.getCurrentY() == y)) {
+            return false;
+        }
+        
+        return true;
     }
 
     private boolean isAtEdge(Safari safari) {

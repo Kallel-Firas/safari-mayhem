@@ -485,26 +485,25 @@ public class GameScreen extends JFrame {
         int numPoachers = random.nextInt(3) + 1; // 1-3 poachers
         
         for (int i = 0; i < numPoachers; i++) {
-            int x, y;
             boolean validPosition = false;
             int attempts = 0;
             
             // Try to find a valid position (max 10 attempts)
             while (!validPosition && attempts < 10) {
-                x = random.nextInt(safari.getLandscapes().size());
-                y = random.nextInt(safari.getLandscapes().get(0).size());
+                final int currentX = random.nextInt(safari.getLandscapes().size());
+                final int currentY = random.nextInt(safari.getLandscapes().get(0).size());
                 
                 // Check if position is valid (not water, not occupied by animals, not occupied by vegetation)
-                if (!(safari.getLandscapes().get(x).get(y) instanceof Water) &&
-                    !safari.getAnimalList().stream().anyMatch(a -> a.getCurrentX() == x && a.getCurrentY() == y) &&
-                    !safari.getVegetationList().stream().anyMatch(v -> v.getCurrentX() == x && v.getCurrentY() == y)) {
+                if (!(safari.getLandscapes().get(currentX).get(currentY) instanceof Water) &&
+                    !safari.getAnimalList().stream().anyMatch(a -> a.getCurrentX() == currentX && a.getCurrentY() == currentY) &&
+                    !safari.getVegetationList().stream().anyMatch(v -> v.getCurrentX() == currentX && v.getCurrentY() == currentY)) {
                     
                     // Check if there are any rangers nearby (within 5 tiles)
                     boolean rangerNearby = safari.getRangers().stream()
-                        .anyMatch(r -> Math.abs(r.getCurrentX() - x) <= 5 && Math.abs(r.getCurrentY() - y) <= 5);
+                        .anyMatch(r -> Math.abs(r.getCurrentX() - currentX) <= 5 && Math.abs(r.getCurrentY() - currentY) <= 5);
                     
                     if (!rangerNearby) {
-                        Poacher poacher = new Poacher(x, y);
+                        Poacher poacher = new Poacher(currentX, currentY);
                         safari.addPoacher(poacher);
                         validPosition = true;
                     }
