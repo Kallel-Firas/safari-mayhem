@@ -4,11 +4,12 @@ import java.util.List;
 import java.util.Random;
 
 public class Poacher extends Entity {
-    private static final int HUNTING_RADIUS = 7;
+    private static final int DETECTION_RADIUS = 7; // Poachers can detect animals within 7 tiles
+    private static final int HUNTING_RADIUS = 1; // Poachers can only hunt animals within 1 tile
     private static final double HUNTING_SUCCESS_RATE = 0.3; // 30% chance of success
     private int hoursOnMap = 0;
     private boolean hasCapturedAnimal = false;
-    private boolean isEscaping = false;
+    private boolean escaping = false;
     private float targetX;
     private float targetY;
     private float moveSpeed = 0.5f; // Speed for 60 FPS movement
@@ -22,15 +23,27 @@ public class Poacher extends Entity {
         this.targetY = y;
     }
 
+    public void setTargetX(float x) {
+        this.targetX = x;
+    }
+
+    public void setTargetY(float y) {
+        this.targetY = y;
+    }
+
+    public boolean isEscaping() {
+        return escaping;
+    }
+
     public void setEscaping(boolean escaping) {
-        this.isEscaping = escaping;
+        this.escaping = escaping;
         if (escaping) {
             targetAnimal = null; // Stop hunting when escaping
         }
     }
 
     public void update(Safari safari) {
-        if (isEscaping) {
+        if (escaping) {
             moveTowardsEdge(safari);
             if (isAtEdge(safari)) {
                 safari.removePoacher(this);
@@ -38,8 +51,10 @@ public class Poacher extends Entity {
             }
         } else {
             hoursOnMap++;
-            if (hoursOnMap >= 6 || hasCapturedAnimal) {
-                isEscaping = true;
+            
+            // Only check time limit if not actively pursuing a target
+            if (hoursOnMap >= 6 && !hasCapturedAnimal && targetAnimal == null) {
+                escaping = true;
                 return;
             }
 
@@ -49,18 +64,19 @@ public class Poacher extends Entity {
                              Math.abs(r.getCurrentY() - getCurrentY()) <= 5);
             
             if (rangerNearby) {
-                isEscaping = true;
+                // Stop moving and wait for ranger
+                targetX = getCurrentX();
+                targetY = getCurrentY();
                 return;
             }
 
             if (!hasCapturedAnimal) {
-                if (targetAnimal == null || !isInHuntingRange(targetAnimal)) {
+                if (targetAnimal == null || !isInDetectionRange(targetAnimal)) {
                     findNewTarget(safari);
                 }
                 
                 if (targetAnimal != null) {
                     moveTowardsTarget(safari);
-                    attemptHunt(safari);
                 } else {
                     wander(safari);
                 }
@@ -70,42 +86,67 @@ public class Poacher extends Entity {
 
     private void findNewTarget(Safari safari) {
         List<Animal> nearbyAnimals = safari.getAnimalList().stream()
-            .filter(animal -> isInHuntingRange(animal))
-            .toList();
+            .filter(animal -> isInDetectionRange(animal))
+            .collect(java.util.stream.Collectors.toList());
 
         if (!nearbyAnimals.isEmpty()) {
-            targetAnimal = nearbyAnimals.get(random.nextInt(nearbyAnimals.size()));
-            targetX = targetAnimal.getCurrentX();
-            targetY = targetAnimal.getCurrentY();
+            // Find the closest animal
+            targetAnimal = nearbyAnimals.stream()
+                .min((a1, a2) -> {
+                    double dist1 = distanceToAnimal(a1);
+                    double dist2 = distanceToAnimal(a2);
+                    return Double.compare(dist1, dist2);
+                })
+                .orElse(null);
+
+            if (targetAnimal != null) {
+                targetX = targetAnimal.getCurrentX();
+                targetY = targetAnimal.getCurrentY();
+                System.out.println("Poacher found new target animal at (" + targetX + "," + targetY + ")");
+            }
         } else {
             targetAnimal = null;
         }
     }
 
-    private void moveTowardsTarget(Safari safari) {
-        if (targetAnimal == null) return;
+    private double distanceToAnimal(Animal animal) {
+        int dx = animal.getCurrentX() - getCurrentX();
+        int dy = animal.getCurrentY() - getCurrentY();
+        return Math.sqrt(dx * dx + dy * dy);
+    }
 
-        float dx = targetAnimal.getCurrentX() - getCurrentX();
-        float dy = targetAnimal.getCurrentY() - getCurrentY();
-        float distance = (float) Math.sqrt(dx * dx + dy * dy);
-        
-        if (distance > 0) {
-            dx /= distance;
-            dy /= distance;
+    private void moveTowardsTarget(Safari safari) {
+        if (targetAnimal != null) {
+            targetX = targetAnimal.getCurrentX();
+            targetY = targetAnimal.getCurrentY();
             
-            float newX = getCurrentX() + dx * moveSpeed;
-            float newY = getCurrentY() + dy * moveSpeed;
+            float dx = targetX - getCurrentX();
+            float dy = targetY - getCurrentY();
+            float distance = (float) Math.sqrt(dx * dx + dy * dy);
             
-            // Try to move in both directions if one is blocked
-            if (!isValidPosition(safari, (int) newX, (int) newY)) {
-                if (isValidPosition(safari, (int) newX, getCurrentY())) {
+            if (distance > 0) {
+                dx /= distance;
+                dy /= distance;
+                
+                float newX = getCurrentX() + dx * moveSpeed;
+                float newY = getCurrentY() + dy * moveSpeed;
+                
+                // Try to move in both directions if one is blocked
+                if (!isValidPosition(safari, (int) newX, (int) newY)) {
+                    if (isValidPosition(safari, (int) newX, getCurrentY())) {
+                        setCurrentX((int) newX);
+                    } else if (isValidPosition(safari, getCurrentX(), (int) newY)) {
+                        setCurrentY((int) newY);
+                    }
+                } else {
                     setCurrentX((int) newX);
-                } else if (isValidPosition(safari, getCurrentX(), (int) newY)) {
                     setCurrentY((int) newY);
                 }
-            } else {
-                setCurrentX((int) newX);
-                setCurrentY((int) newY);
+            }
+            
+            // Attempt to hunt as soon as we're in range
+            if (isInHuntingRange(targetAnimal)) {
+                attemptHunt(safari);
             }
         }
     }
@@ -192,19 +233,37 @@ public class Poacher extends Entity {
     private void attemptHunt(Safari safari) {
         if (targetAnimal != null && isInHuntingRange(targetAnimal)) {
             if (random.nextDouble() < HUNTING_SUCCESS_RATE) {
+                System.out.println("Poacher successfully hunted an animal!");
+                
                 // Remove animal from its herd
                 for (Herd herd : safari.getHerdList()) {
                     if (herd.getAnimalList().contains(targetAnimal)) {
                         herd.getAnimalList().remove(targetAnimal);
+                        System.out.println("Removed animal from herd");
                         break;
                     }
                 }
+                
                 // Remove from safari's animal list
                 safari.getAnimalList().remove(targetAnimal);
+                System.out.println("Removed animal from safari list");
+                
                 hasCapturedAnimal = true;
                 targetAnimal = null;
+                
+                // Start escaping after successful hunt
+                escaping = true;
+            } else {
+                System.out.println("Poacher failed to hunt the animal");
+                // Keep trying to hunt the same animal
             }
         }
+    }
+
+    private boolean isInDetectionRange(Animal animal) {
+        int dx = animal.getCurrentX() - getCurrentX();
+        int dy = animal.getCurrentY() - getCurrentY();
+        return dx * dx + dy * dy <= DETECTION_RADIUS * DETECTION_RADIUS;
     }
 
     private boolean isInHuntingRange(Animal animal) {

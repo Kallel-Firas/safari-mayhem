@@ -140,25 +140,39 @@ public class GameScreen extends JFrame {
         // Check if the position is water
         boolean isWater = safari.getLandscapes().get(x).get(y) instanceof Water;
 
-        // Only check placement restrictions for animals
-        if (selectedItemType.equals("animal")) {
+        // Handle ranger placement
+        if (selectedItemType.equals("ranger")) {
             if (isOccupiedByAnimal || hasVegetation || isWater) {
-                String errorMessage = "Cannot place " + selectedItem + " here!\n";
+                String errorMessage = "Cannot place ranger here!\n";
                 if (isOccupiedByAnimal) {
-                    errorMessage += "Position is occupied by another animal.";
+                    errorMessage += "Position is occupied by an animal.";
                 } else if (hasVegetation) {
                     errorMessage += "Position has vegetation (tree/bush).";
                 } else if (isWater) {
-                    errorMessage += "Cannot place animals on water.";
+                    errorMessage += "Cannot place ranger on water.";
                 }
                 
                 refundPurchase();
                 showPlacementError(errorMessage);
                 return;
             }
+            
+            Ranger ranger = new Ranger(50); // Daily salary of 50
+            ranger.setCurrentX(x);
+            ranger.setCurrentY(y);
+            safari.addRanger(ranger);
+            System.out.println("Ranger placed successfully");
+            
+            // Reset selection and cursor immediately after placing ranger
+            selectedItem = null;
+            selectedItemType = null;
+            setCursor(Cursor.getDefaultCursor());
+            gameMap.repaint();
+            miniMap.repaint();
+            return;
         }
 
-        // If we get here, proceed with placement
+        // Existing placement logic for other items
         try {
             switch (selectedItemType) {
                 case "animal":
@@ -276,6 +290,7 @@ public class GameScreen extends JFrame {
         addShopItem(panel, "resources/lion.png", "Lion", 600, "animal");
         addShopItem(panel, "resources/elephant.png", "Elephant", 800, "animal");
         addShopItem(panel, "resources/sheep.png", "Sheep", 200, "animal");
+        addShopItem(panel, "resources/ranger.png", "Ranger", 500, "ranger");
 
         return new JScrollPane(panel);
     }
@@ -409,15 +424,10 @@ public class GameScreen extends JFrame {
         timeLabel.setText(String.format("Day %d, %02d:00", day, hour));
     }
 
-    private void drawRangers(Graphics g) {
-        for (Ranger ranger : safari.getRangers()) {
-            int x = ranger.getCurrentX() * 32; // Assuming tile size is 32
-            int y = ranger.getCurrentY() * 32;
-            g.setColor(Color.BLUE);
-            g.fillRect(x, y, 32, 32);
-            g.setColor(Color.BLACK);
-            g.drawString("R", x + 12, y + 20);
-        }
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+        drawAnimals(g);
     }
 
     private void drawAnimals(Graphics g) {
@@ -426,13 +436,6 @@ public class GameScreen extends JFrame {
             int y = animal.getCurrentY() * 32;
             
         }
-    }
-
-    @Override
-    public void paint(Graphics g) {
-        super.paint(g);
-        drawRangers(g);
-        drawAnimals(g);
     }
 
     private void updateGameState() {
@@ -452,6 +455,21 @@ public class GameScreen extends JFrame {
             // Add daily capital at the start of each new day
             balance += 500;
             balanceLabel.setText("Balance: $" + balance);
+            
+            // Pay rangers their daily salary
+            for (Ranger ranger : safari.getRangers()) {
+                balance -= ranger.getSalary();
+                balanceLabel.setText("Balance: $" + balance);
+            }
+        }
+
+        // Update rangers and handle poacher interactions
+        for (Ranger ranger : safari.getRangers()) {
+            ranger.update(safari);
+            if (ranger.hasRepelledPoacher()) {
+                balance += 50; // Bonus for repelling poacher
+                balanceLabel.setText("Balance: $" + balance);
+            }
         }
 
         // Spawn poacher every 8 hours
@@ -459,22 +477,16 @@ public class GameScreen extends JFrame {
             spawnPoachers();
         }
 
-        // Update poachers and remove those that have been present for 6 hours without success
-        boolean poachersRemoved = false;
+        // Update poachers and remove those that have been caught or have been present for too long
         Iterator<Poacher> iterator = safari.getPoachers().iterator();
         while (iterator.hasNext()) {
             Poacher poacher = iterator.next();
             poacher.update(safari);
-            if (poacher.hasCapturedAnimal() || poacher.getTimePresent() >= 6) {
+            if (poacher.isEscaping() || poacher.getTimePresent() >= 6) {
                 iterator.remove();
-                poachersRemoved = true;
+                gameMap.repaint();
+                miniMap.repaint();
             }
-        }
-
-        // If poachers were removed, update the map display
-        if (poachersRemoved) {
-            gameMap.repaint();
-            miniMap.repaint();
         }
 
         timeLabel.setText(String.format("Day %d, %02d:00", day, hour));

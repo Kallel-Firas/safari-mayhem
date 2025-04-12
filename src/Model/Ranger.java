@@ -2,16 +2,29 @@ package Model;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 public class Ranger extends Entity {
     private int salary;
-    private static final int DETECTION_RADIUS = 8; // Rangers can detect poachers within 8 tiles
-    private static final int ELIMINATION_RADIUS = 2; // Rangers can eliminate poachers within 2 tiles
+    private static final int DETECTION_RADIUS = 5; // Rangers can detect poachers within 5 tiles
+    private static final int ELIMINATION_RADIUS = 1; // Rangers can eliminate poachers within 1 tile
     private static final int PATROL_RADIUS = 15; // Rangers patrol within this radius
-    private float moveSpeed = 0.5f; // Speed for 60 FPS movement
+    private static final int MAX_TIME_PRESENT = 10; // Rangers can stay for 10 hours
+    private static final int BLOCKS_PER_DIRECTION = 3; // Number of blocks to move in one direction
+    private float moveSpeed = 0.5f; // Normal speed
+    private float chaseSpeed = 1.0f; // Speed when chasing poachers
     private float targetX;
     private float targetY;
-    private boolean isPatrolling = true;
+    private boolean hasRepelledPoacher = false;
+    private Poacher currentTarget = null;
+    private Random random = new Random();
+    private int timePresent = 0;
+    private int blocksMovedInDirection = 0;
+    private Direction currentDirection = Direction.NORTH;
+
+    private enum Direction {
+        NORTH, SOUTH, EAST, WEST
+    }
 
     public Ranger(int salary) {
         this.salary = salary;
@@ -19,66 +32,101 @@ public class Ranger extends Entity {
         this.targetY = getCurrentY();
     }
 
+    public int getSalary() {
+        return salary;
+    }
+
+    public boolean hasRepelledPoacher() {
+        boolean result = hasRepelledPoacher;
+        hasRepelledPoacher = false; // Reset the flag
+        return result;
+    }
+
     public void update(Safari safari) {
-        // First check for nearby poachers
-        Optional<Poacher> nearestPoacher = findNearestPoacher(safari);
+        timePresent++;
         
-        if (nearestPoacher.isPresent()) {
-            isPatrolling = false;
-            Poacher poacher = nearestPoacher.get();
+        if (timePresent >= MAX_TIME_PRESENT) {
+            return; // Ranger has reached their time limit
+        }
+
+        // Always search for poachers
+        searchForPoachers(safari);
+
+        // If we have a target, move towards it
+        if (currentTarget != null) {
+            moveTowardsPoacher(currentTarget, safari);
             
-            if (isInEliminationRange(poacher)) {
-                System.out.println("Ranger eliminated a poacher!");
-                poacher.setEscaping(true);
-            } else {
-                moveTowardsPoacher(poacher, safari);
+            // If we're next to the poacher, eliminate them
+            if (isInEliminationRange(currentTarget)) {
+                System.out.println("Ranger caught a poacher!");
+                safari.removePoacher(currentTarget);
+                hasRepelledPoacher = true;
+                currentTarget = null;
             }
         } else {
-            isPatrolling = true;
+            // If no target, continue patrolling
             patrol(safari);
         }
     }
 
-    private Optional<Poacher> findNearestPoacher(Safari safari) {
-        return safari.getPoachers().stream()
-            .filter(poacher -> isInProximity(poacher))
+    private void searchForPoachers(Safari safari) {
+        // Find the nearest poacher within detection radius
+        Optional<Poacher> nearestPoacher = safari.getPoachers().stream()
+            .filter(poacher -> isInProximity(poacher) && !poacher.isEscaping())
             .min((p1, p2) -> {
                 double dist1 = distanceTo(p1);
                 double dist2 = distanceTo(p2);
                 return Double.compare(dist1, dist2);
             });
-    }
 
-    private double distanceTo(Poacher poacher) {
-        int dx = poacher.getCurrentX() - getCurrentX();
-        int dy = poacher.getCurrentY() - getCurrentY();
-        return Math.sqrt(dx * dx + dy * dy);
+        if (nearestPoacher.isPresent()) {
+            currentTarget = nearestPoacher.get();
+            System.out.println("Ranger found a poacher at distance: " + distanceTo(currentTarget));
+        }
     }
 
     private void patrol(Safari safari) {
-        // If reached target or no target set, choose new patrol point
-        if (Math.abs(getCurrentX() - targetX) < 0.5 && Math.abs(getCurrentY() - targetY) < 0.5) {
-            // Choose a new random point within patrol radius
-            double angle = Math.random() * 2 * Math.PI;
-            double distance = Math.random() * PATROL_RADIUS;
-            targetX = (float) (getCurrentX() + Math.cos(angle) * distance);
-            targetY = (float) (getCurrentY() + Math.sin(angle) * distance);
-            
-            // Ensure target is within map bounds
-            targetX = Math.max(0, Math.min(safari.getLandscapes().size() - 1, targetX));
-            targetY = Math.max(0, Math.min(safari.getLandscapes().get(0).size() - 1, targetY));
+        if (blocksMovedInDirection >= BLOCKS_PER_DIRECTION) {
+            // Choose a new random direction
+            Direction[] directions = Direction.values();
+            currentDirection = directions[random.nextInt(directions.length)];
+            blocksMovedInDirection = 0;
         }
-        
-        moveTowardsTarget(safari);
+
+        // Calculate target based on current direction
+        switch (currentDirection) {
+            case NORTH:
+                targetX = getCurrentX();
+                targetY = getCurrentY() - 1;
+                break;
+            case SOUTH:
+                targetX = getCurrentX();
+                targetY = getCurrentY() + 1;
+                break;
+            case EAST:
+                targetX = getCurrentX() + 1;
+                targetY = getCurrentY();
+                break;
+            case WEST:
+                targetX = getCurrentX() - 1;
+                targetY = getCurrentY();
+                break;
+        }
+
+        // Ensure target is within map bounds
+        targetX = Math.max(0, Math.min(safari.getLandscapes().size() - 1, targetX));
+        targetY = Math.max(0, Math.min(safari.getLandscapes().get(0).size() - 1, targetY));
+
+        // Move towards target
+        if (moveTowardsTarget(safari, moveSpeed)) {
+            blocksMovedInDirection++;
+        } else {
+            // If movement is blocked, choose a new direction
+            blocksMovedInDirection = BLOCKS_PER_DIRECTION;
+        }
     }
 
-    private void moveTowardsPoacher(Poacher poacher, Safari safari) {
-        targetX = poacher.getCurrentX();
-        targetY = poacher.getCurrentY();
-        moveTowardsTarget(safari);
-    }
-
-    private void moveTowardsTarget(Safari safari) {
+    private boolean moveTowardsTarget(Safari safari, float speed) {
         float dx = targetX - getCurrentX();
         float dy = targetY - getCurrentY();
         float distance = (float) Math.sqrt(dx * dx + dy * dy);
@@ -87,21 +135,28 @@ public class Ranger extends Entity {
             dx /= distance;
             dy /= distance;
             
-            float newX = getCurrentX() + dx * moveSpeed;
-            float newY = getCurrentY() + dy * moveSpeed;
+            float newX = getCurrentX() + dx * speed;
+            float newY = getCurrentY() + dy * speed;
             
-            // Try to move in both directions if one is blocked
-            if (!isValidPosition(safari, (int) newX, (int) newY)) {
-                if (isValidPosition(safari, (int) newX, getCurrentY())) {
-                    setCurrentX((int) newX);
-                } else if (isValidPosition(safari, getCurrentX(), (int) newY)) {
-                    setCurrentY((int) newY);
-                }
-            } else {
+            if (isValidPosition(safari, (int) newX, (int) newY)) {
                 setCurrentX((int) newX);
                 setCurrentY((int) newY);
+                return true;
             }
         }
+        return false;
+    }
+
+    private void moveTowardsPoacher(Poacher poacher, Safari safari) {
+        targetX = poacher.getCurrentX();
+        targetY = poacher.getCurrentY();
+        moveTowardsTarget(safari, chaseSpeed);
+    }
+
+    private double distanceTo(Poacher poacher) {
+        int dx = poacher.getCurrentX() - getCurrentX();
+        int dy = poacher.getCurrentY() - getCurrentY();
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     private boolean isValidPosition(Safari safari, int x, int y) {

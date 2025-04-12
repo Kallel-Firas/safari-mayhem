@@ -114,15 +114,23 @@ public class MiniMap extends JPanel {
             }
         }
 
-        // Draw entities (rangers and poachers)
-        if (entities != null) {
-            for (Entity entity : entities) {
-                BufferedImage img = entityImages.get(entity.getClass());
-                if (img != null) {
-                    g.drawImage(img, entity.getCurrentX() * miniMapResolution,
-                            entity.getCurrentY() * miniMapResolution,
-                            miniMapResolution, miniMapResolution, null);
-                }
+        // Draw rangers
+        for (Ranger ranger : gameMap.getSafari().getRangers()) {
+            BufferedImage img = entityImages.get(Ranger.class);
+            if (img != null) {
+                g.drawImage(img, ranger.getCurrentX() * miniMapResolution,
+                        ranger.getCurrentY() * miniMapResolution,
+                        miniMapResolution, miniMapResolution, null);
+            }
+        }
+
+        // Draw poachers
+        for (Poacher poacher : gameMap.getSafari().getPoachers()) {
+            BufferedImage img = entityImages.get(Poacher.class);
+            if (img != null) {
+                g.drawImage(img, poacher.getCurrentX() * miniMapResolution,
+                        poacher.getCurrentY() * miniMapResolution,
+                        miniMapResolution, miniMapResolution, null);
             }
         }
 
