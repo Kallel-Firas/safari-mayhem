@@ -119,16 +119,12 @@ public class Herd<T extends Animal> {
         }
         // Check if any animal has reached the destination
         if (isMoving && moveToLocation != null) {
-            boolean allArrived = true;
+            boolean allArrived = false;
             for (T animal : animalList) {
-                // If any animal is more than 1 tile away from the destination, not all have arrived
-                int xDiff = Math.abs(animal.getCurrentX() - moveToLocation[0]);
-                int yDiff = Math.abs(animal.getCurrentY() - moveToLocation[1]);
-                
-                if (xDiff > 2 || yDiff > 2) {
-                    allArrived = false;
+               if (animal.getCurrentX() == moveToLocation[0] && animal.getCurrentY() == moveToLocation[1]) {
+                    allArrived = true;
                     break;
-                }
+               }
             }
             
             if (allArrived) {

@@ -112,7 +112,7 @@ public abstract class Animal extends Entity {
             }
         } if (y != currentY){
             targetY = currentY + Math.abs(y-currentY)/(y-currentY);
-            if (!(map.get(currentY).get(targetY) instanceof Water) && emptySpace(currentX, targetY, entities)) {
+            if (!(map.get(currentX).get(targetY) instanceof Water) && emptySpace(currentX, targetY, entities)) {
                 currentY = targetY;
                 return;
             }
