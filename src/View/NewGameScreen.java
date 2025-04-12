@@ -2,19 +2,18 @@ package View;
 
 import javax.swing.*;
 import java.awt.*;
-import javax.swing.Timer;
 
 public class NewGameScreen extends JFrame {
 
     public NewGameScreen() {
         setTitle("New Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setPreferredSize(new Dimension(50*16, 50*16));
+        setPreferredSize(new Dimension(50 * 16, 50 * 16));
 
         setLayout(new GridLayout(4, 1));
 
         JTextField gameNameField = new JTextField();
-        JComboBox<String> difficultyComboBox = new JComboBox<>(new String[] {"Easy", "Medium", "Hard"});
+        JComboBox<String> difficultyComboBox = new JComboBox<>(new String[]{"Easy", "Medium", "Hard"});
         JButton startGameButton = new JButton("Start Game");
         JButton backButton = new JButton("Main Menu");
 
@@ -35,7 +34,9 @@ public class NewGameScreen extends JFrame {
             gameScreen.setLocationRelativeTo(null);
             gameScreen.setVisible(true);
             this.dispose();
-            Timer timer = new Timer(1000, e2 -> {gameScreen.run();});
+            Timer timer = new Timer(1000, e2 -> {
+                gameScreen.run();
+            });
             timer.start();
         });
 

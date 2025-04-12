@@ -1,5 +1,7 @@
 package View;
 
+import Model.Landscape;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -7,8 +9,6 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Map;
-
-import Model.*;
 
 public class MiniMap extends JPanel {
     private List<List<Landscape>> terrain;
@@ -30,8 +30,7 @@ public class MiniMap extends JPanel {
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isMiddleMouseButton(e)) {
                     togglePosition();
-                }
-                else if (SwingUtilities.isLeftMouseButton(e)) {
+                } else if (SwingUtilities.isLeftMouseButton(e)) {
                     updateGameMapViewport(e.getX(), e.getY());
                 }
             }
@@ -52,7 +51,7 @@ public class MiniMap extends JPanel {
             }
         }
         g.setColor(Color.RED);
-        g.drawRect(viewportX * miniMapResolution, viewportY * miniMapResolution, viewportWidth * miniMapResolution -1, viewportHeight * miniMapResolution -1);
+        g.drawRect(viewportX * miniMapResolution, viewportY * miniMapResolution, viewportWidth * miniMapResolution - 1, viewportHeight * miniMapResolution - 1);
     }
 
     public void update(List<List<Landscape>> terrain) {

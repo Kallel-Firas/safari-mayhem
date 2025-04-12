@@ -6,7 +6,7 @@ import java.awt.*;
 public class WelcomeScreen extends JFrame {
     public WelcomeScreen() {
         // set the preferred size of the welcome screen
-        setPreferredSize(new Dimension(50*16, 50*16));
+        setPreferredSize(new Dimension(50 * 16, 50 * 16));
         // set the layout of the welcome screen
         setLayout(new GridLayout(3, 1));
         // create a new game button

@@ -1,11 +1,12 @@
 package Model;
 
-public class Ranger {
+public class Ranger extends Entity {
     private int salary;
 
     public Ranger(int salary) {
         this.salary = salary;
     }
+
     public void eliminatePredator() {
         System.out.println("Model.Ranger is eliminating a predator.");
 

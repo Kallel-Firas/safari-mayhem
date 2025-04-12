@@ -19,7 +19,6 @@ public abstract class Animal extends Entity {
     private List<int[]> food_locations;
     private boolean alive = true;
     private int currentX, currentY;
-    public List<int[]> blockList;
 
     public int getCurrentX() {
         return currentX;
@@ -56,9 +55,6 @@ public abstract class Animal extends Entity {
         this.visionRadius = visionRadius;
     }
 
-    public String getName() {
-        return name;
-    }
 
     public int getAge() {
         return age;
@@ -72,38 +68,8 @@ public abstract class Animal extends Entity {
         return hunger_change;
     }
 
-    public void setHungerChange(float hunger_change) {
-
-        if (this.age > 2) {
-            this.hunger_change = hunger_change * 2;
-        } else {
-            this.hunger_change = hunger_change;
-        }
-
-    }
-
-    public float getThirstChange() {
-        return thirst_change;
-    }
-
-    public void setThirstChange(float thirst_change) {
-        if (this.age > 2) {
-            this.thirst_change = thirst_change * 2;
-        } else {
-            this.thirst_change = thirst_change;
-        }
-    }
-
     public int getVisionRadius() {
         return visionRadius;
-    }
-
-    public void setVisionRadius(int visionRadius) {
-        this.visionRadius = visionRadius;
-    }
-
-    public void setLeader(boolean isLeader) {
-        this.isLeader = isLeader;
     }
 
     public int getHungerMeter() {
@@ -123,56 +89,194 @@ public abstract class Animal extends Entity {
     }
 
     public void Eat() {
-        this.hunger_meter=0;
+        this.hunger_meter = 0;
 
     }
 
-    public void Sleep() {
-        // sleep method makes the animal do the sleep animation
-    }
-
-    public void Move(int x, int y,List<int[]> blockList) {  //  removed the merge and added the list to the parameter blockList
-        for( int[] block : blockList) {
-            //here we should but the graphic part where the animal moves to this block
+    private boolean emptySpace(int x, int y, List<Entity> entities) {
+        for (Entity entity : entities) {
+            if (entity.getCurrentX() == x && entity.getCurrentY() == y && entity instanceof Animal) {
+                return false;
+            }
         }
-        setCurrentX(x);
-        setCurrentY(y);
+        return true;
+    }
+
+//    public void Move(int x, int y, List<List<Landscape>> map, List<Entity> entities) {  //  removed the merge and added the list to the parameter blockList
+//        int targetX, targetY;
+//        double randomValue = Math.random();
+//        if (currentX != x && currentY != y){
+//            if (randomValue < 0.5) {
+//                targetX = currentX + Math.abs(x-currentX)/(x-currentX);
+//                if (!(map.get(targetX).get(currentY) instanceof Water) && emptySpace(targetX, currentY, entities)) {
+//                    currentX = targetX;
+//                    return;
+//                }
+//            } else {
+//                targetY = currentY + Math.abs(y-currentY)/(y-currentY);
+//                if (!(map.get(currentX).get(targetY) instanceof Water) && emptySpace(currentX, targetY, entities)) {
+//                    currentY = targetY;
+//                    return;
+//                }
+//            }
+//        }
+//        if (x != currentX){
+//            targetX = currentX + Math.abs(x-currentX)/(x-currentX);
+//            if (!(map.get(targetX).get(currentY) instanceof Water) && emptySpace(targetX, currentY, entities)) {
+//                currentX = targetX;
+//                return;
+//            }
+//        } if (y != currentY){
+//            targetY = currentY + Math.abs(y-currentY)/(y-currentY);
+//            if (!(map.get(currentX).get(targetY) instanceof Water) && emptySpace(currentX, targetY, entities)) {
+//                currentY = targetY;
+//                return;
+//            }
+//        }
+//        // if animal cannot move in x or y direction, try to move in the opposite direction
+//        randomValue = Math.random();
+//        if (randomValue < 0.5) {
+//            targetX = currentX - 1;
+//            if (targetX < 0){
+//                targetX = 2;
+//            }
+//        } else {
+//            targetX = currentX + 1;
+//            if (targetX > map.size()-1){
+//                targetX = map.size()-2;
+//            }
+//        }
+//
+//        randomValue = Math.random();
+//        if (randomValue < 0.5) {
+//            targetY = currentY - 1;
+//            if (targetY < 0){
+//                targetY = 2;
+//            }
+//        } else {
+//            targetY = currentY + 1;
+//            if (targetY > map.getFirst().size()-1){
+//                targetY = map.getFirst().size()-2;
+//            }
+//        }
+//
+//        randomValue = Math.random();
+//        if (randomValue < 0.5) {
+//            if (!(map.get(targetX).get(currentY) instanceof Water) && emptySpace(targetX, currentY, entities)) {
+//                currentX = targetX;
+//            }
+//        } else {
+//            if (!(map.get(currentX).get(targetY) instanceof Water) && emptySpace(currentX, targetY, entities)) {
+//                currentY = targetY;
+//            }
+//        }
+//    }
+public void Move(int x, int y, List<List<Landscape>> map, List<Entity> entities) {
+    // If already at destination, don't move
+    if (currentX == x && currentY == y) {
+        return;
+    }
+
+    // Calculate direction to target
+    int xDirection = 0;
+    int yDirection = 0;
+
+    if (currentX < x) xDirection = 1;
+    else if (currentX > x) xDirection = -1;
+
+    if (currentY < y) yDirection = 1;
+    else if (currentY > y) yDirection = -1;
+
+    // Decide whether to move in X or Y direction first (random)
+    boolean moveInXFirst = Math.random() < 0.5;
+
+    // Try primary movement direction
+    if (moveInXFirst && xDirection != 0) {
+        // Try to move in X direction
+        int newX = currentX + xDirection;
+        if (isValidMove(newX, currentY, map, entities)) {
+            currentX = newX;
+            return;
+        }
+    } else if (!moveInXFirst && yDirection != 0) {
+        // Try to move in Y direction
+        int newY = currentY + yDirection;
+        if (isValidMove(currentX, newY, map, entities)) {
+            currentY = newY;
+            return;
+        }
+    }
+
+    // Try secondary movement direction if primary failed
+    if (moveInXFirst && yDirection != 0) {
+        // Try to move in Y direction
+        int newY = currentY + yDirection;
+        if (isValidMove(currentX, newY, map, entities)) {
+            currentY = newY;
+            return;
+        }
+    } else if (!moveInXFirst && xDirection != 0) {
+        // Try to move in X direction
+        int newX = currentX + xDirection;
+        if (isValidMove(newX, currentY, map, entities)) {
+            currentX = newX;
+            return;
+        }
+    }
+
+    // If we couldn't move directly toward the target, try a random adjacent move
+    // This helps animals get around obstacles
+    int[][] adjacentOffsets = {{1,0}, {-1,0}, {0,1}, {0,-1}};
+
+    // Shuffle the offsets to try them in random order
+    for (int i = adjacentOffsets.length - 1; i > 0; i--) {
+        int j = (int)(Math.random() * (i + 1));
+        int[] temp = adjacentOffsets[i];
+        adjacentOffsets[i] = adjacentOffsets[j];
+        adjacentOffsets[j] = temp;
+    }
+
+    // Try each adjacent position in random order
+    for (int[] offset : adjacentOffsets) {
+        int newX = currentX + offset[0];
+        int newY = currentY + offset[1];
+
+        if (isValidMove(newX, newY, map, entities)) {
+            currentX = newX;
+            currentY = newY;
+            return;
+        }
+    }
+
+    // If we get here, the animal couldn't move at all this turn
+    System.out.println("Animal at (" + currentX + "," + currentY + ") is stuck and cannot move toward (" + x + "," + y + ")");
+}
+
+    // Helper method to check if a move is valid
+    private boolean isValidMove(int x, int y, List<List<Landscape>> map, List<Entity> entities) {
+        // Check bounds
+        if (x < 0 || x >= map.size() || y < 0 || y >= map.get(0).size()) {
+            return false;
+        }
+
+        // Check for water
+        if (map.get(x).get(y) instanceof Water) {
+            return false;
+        }
+
+        // Check for other animals (using existing emptySpace method)
+        return emptySpace(x, y, entities);
     }
 
     public void Drink() {
         this.thirst_meter = 0;
     }
 
-    public boolean Reproduce(Animal partner) {
-
-        return false;
-    }
-
-    public boolean isAlive() {
-        return alive;
-    }
 
     public void Update() {
-        setAge(getAge()+1);
-        setHungerMeter(getHungerMeter() + (int)(100*getHungerChange()));
-        setThirstMeter(getThirstMeter() +  (int)(100*getHungerChange()));
-
-        if(age>=lifespan) {
+        setAge(getAge() + 1);
+        if (age >= lifespan) {
             alive = false;
         }
-
-
-    }
-
-    public boolean Search(String target) {
-        return false;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public boolean isLeader() {
-        return isLeader;
     }
 }

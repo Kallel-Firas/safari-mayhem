@@ -2,13 +2,13 @@ package Model;
 
 public class Elephant extends Herbivorous {
     public Elephant(int id, String name, boolean isLeader) {
-        super(id, name, 1, 0.4F/24, 0.35F/24, isLeader, 100*24, 35);
+        super(id, name, 1, 0.4F / 24, 0.35F / 24, isLeader, 100 * 24, 7);
     }
 
     public Elephant(int id, String name, boolean isLeader, int currentX, int currentY) {
-        super(id, name, 1, 0.4F/24, 0.35F/24, isLeader, 100*24, 35);
-       this.setCurrentX(currentX);
-       this.setCurrentY(currentY);
+        super(id, name, 1, 0.4F / 24, 0.35F / 24, isLeader, 100 * 24, 7);
+        this.setCurrentX(currentX);
+        this.setCurrentY(currentY);
     }
 
     public boolean Eat(int x, int y) {
@@ -24,7 +24,7 @@ public class Elephant extends Herbivorous {
     public boolean Reproduce(Animal partner) {// edited the Reporduce method to
         //to make it that if both animals are above a certain age they can reproduce
 
-        if(getAge()>24*20 && partner.getAge()>24*20& isCanReproduce() & partner.isCanReproduce()){
+        if (getAge() > 24 * 20 && partner.getAge() > 24 * 20 & isCanReproduce() & partner.isCanReproduce()) {
             return partner instanceof Elephant;
 
         }
