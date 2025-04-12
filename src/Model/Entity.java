@@ -5,6 +5,10 @@ public abstract class Entity {
     private int currentX;
     private int currentY;
 
+    public Entity() {
+
+    }
+
     public int getCurrentX() {
         return currentX;
     }
