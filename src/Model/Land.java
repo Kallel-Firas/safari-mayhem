@@ -1,4 +1,4 @@
 package Model;
 
-public abstract class Land extends Landscape{
+public abstract class Land extends Landscape {
 }

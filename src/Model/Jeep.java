@@ -3,7 +3,7 @@ package Model;
 public class Jeep extends Entity {
     private int price = 2000;
     private int capacity = 4;
-    private int rentalPrice ;
+    private int rentalPrice;
 
     public void setCapacity(int capacity) {
         this.capacity = capacity;

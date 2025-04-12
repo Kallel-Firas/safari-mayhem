@@ -1,4 +1,4 @@
 package Model;
 
-public class Water extends WaterSource{
+public class Water extends WaterSource {
 }

@@ -19,7 +19,6 @@ public abstract class Animal extends Entity {
     private List<int[]> food_locations;
     private boolean alive = true;
     private int currentX, currentY;
-    public List<int[]> blockList;
 
     public int getCurrentX() {
         return currentX;
@@ -56,9 +55,6 @@ public abstract class Animal extends Entity {
         this.visionRadius = visionRadius;
     }
 
-    public String getName() {
-        return name;
-    }
 
     public int getAge() {
         return age;
@@ -72,38 +68,8 @@ public abstract class Animal extends Entity {
         return hunger_change;
     }
 
-    public void setHungerChange(float hunger_change) {
-
-        if (this.age > 2) {
-            this.hunger_change = hunger_change * 2;
-        } else {
-            this.hunger_change = hunger_change;
-        }
-
-    }
-
-    public float getThirstChange() {
-        return thirst_change;
-    }
-
-    public void setThirstChange(float thirst_change) {
-        if (this.age > 2) {
-            this.thirst_change = thirst_change * 2;
-        } else {
-            this.thirst_change = thirst_change;
-        }
-    }
-
     public int getVisionRadius() {
         return visionRadius;
-    }
-
-    public void setVisionRadius(int visionRadius) {
-        this.visionRadius = visionRadius;
-    }
-
-    public void setLeader(boolean isLeader) {
-        this.isLeader = isLeader;
     }
 
     public int getHungerMeter() {
@@ -123,56 +89,83 @@ public abstract class Animal extends Entity {
     }
 
     public void Eat() {
-        this.hunger_meter=0;
+        this.hunger_meter = 0;
 
     }
 
-    public void Sleep() {
-        // sleep method makes the animal do the sleep animation
-    }
-
-    public void Move(int x, int y,List<int[]> blockList) {  //  removed the merge and added the list to the parameter blockList
-        for( int[] block : blockList) {
-            //here we should but the graphic part where the animal moves to this block
+    private boolean emptySpace(int x, int y, List<Entity> entities) {
+        for (Entity entity : entities) {
+            if (entity.getCurrentX() == x && entity.getCurrentY() == y && entity instanceof Animal) {
+                return false;
+            }
         }
-        setCurrentX(x);
-        setCurrentY(y);
+        return true;
     }
+
+    public void Move(int x, int y, List<List<Landscape>> map, List<Entity> entities) {  //  removed the merge and added the list to the parameter blockList
+        int targetX, targetY;
+        if (x != currentX){
+            targetX = currentX + Math.abs(x-currentX)/(x-currentX);
+            if (!(map.get(targetX).get(currentY) instanceof Water) && emptySpace(targetX, currentY, entities)) {
+                currentX = targetX;
+                return;
+            }
+        } if (y != currentY){
+            targetY = currentY + Math.abs(y-currentY)/(y-currentY);
+            if (!(map.get(currentY).get(targetY) instanceof Water) && emptySpace(currentX, targetY, entities)) {
+                currentY = targetY;
+                return;
+            }
+        }
+        // if cannot move in x or y direction, try to move in the opposite direction
+        double randomValue = Math.random();
+        if (randomValue < 0.5) {
+            targetX = currentX - 1;
+            if (targetX < 0){
+                targetX = 2;
+            }
+        } else {
+            targetX = currentX + 1;
+            if (targetX > map.size()-1){
+                targetX = map.size()-2;
+            }
+        }
+
+        randomValue = Math.random();
+        if (randomValue < 0.5) {
+            targetY = currentY - 1;
+            if (targetY < 0){
+                targetY = 2;
+            }
+        } else {
+            targetY = currentY + 1;
+            if (targetY > map.get(0).size()-1){
+                targetY = map.get(0).size()-2;
+            }
+        }
+
+        randomValue = Math.random();
+        if (randomValue < 0.5) {
+            if (!(map.get(targetX).get(currentY) instanceof Water) && emptySpace(targetX, currentY, entities)) {
+                currentX = targetX;
+            }
+        } else {
+            if (!(map.get(currentX).get(targetY) instanceof Water) && emptySpace(currentX, targetY, entities)) {
+                currentY = targetY;
+            }
+        }
+    }
+
 
     public void Drink() {
         this.thirst_meter = 0;
     }
 
-    public boolean Reproduce(Animal partner) {
-
-        return false;
-    }
-
-    public boolean isAlive() {
-        return alive;
-    }
 
     public void Update() {
-        setAge(getAge()+1);
-        setHungerMeter(getHungerMeter() + (int)(100*getHungerChange()));
-        setThirstMeter(getThirstMeter() +  (int)(100*getHungerChange()));
-
-        if(age>=lifespan) {
+        setAge(getAge() + 1);
+        if (age >= lifespan) {
             alive = false;
         }
-
-
-    }
-
-    public boolean Search(String target) {
-        return false;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public boolean isLeader() {
-        return isLeader;
     }
 }

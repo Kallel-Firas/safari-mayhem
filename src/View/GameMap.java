@@ -1,5 +1,7 @@
 package View;
 
+import Model.*;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -7,11 +9,10 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.List;
 import java.io.IOException;
-import java.util.*;
-
-import Model.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class GameMap extends JPanel implements MouseWheelListener {
     // also load images: tree, grass, bush
@@ -71,7 +72,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
         } catch (IOException e) {
             System.out.println("Error loading image");
         }
-        setPreferredSize(new Dimension(50*textureResolution/2, 50*textureResolution/2));
+        setPreferredSize(new Dimension(50 * textureResolution / 2, 50 * textureResolution / 2));
         addMouseWheelListener(this);
     }
 
@@ -100,14 +101,14 @@ public class GameMap extends JPanel implements MouseWheelListener {
 //                g.drawImage(image, animal.getCurrentX()*textureResolution, animal.getCurrentY()*textureResolution, null);
 //            }
 //        }
-////        g.drawImage(entityImages.get(Cheetah.class), 0, 0, null);
-////        g.drawImage(waterImage, 16, 0, null);
-////        g.drawImage(treeImage, 16*16, 16*15, null);
-////        g.drawImage(cheetahImage, 16*32, 16*32, null);
-////        g.drawImage(babyCheetahImage, 16*16, 16*16, null);
-////        g.drawImage(babySheepImage, 16*16, 16*17, null);
-//    }
 
+    /// /        g.drawImage(entityImages.get(Cheetah.class), 0, 0, null);
+    /// /        g.drawImage(waterImage, 16, 0, null);
+    /// /        g.drawImage(treeImage, 16*16, 16*15, null);
+    /// /        g.drawImage(cheetahImage, 16*32, 16*32, null);
+    /// /        g.drawImage(babyCheetahImage, 16*16, 16*16, null);
+    /// /        g.drawImage(babySheepImage, 16*16, 16*17, null);
+//    }
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -159,6 +160,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
     public int getViewportX() {
         return viewportX;
     }
+
     public int getViewportY() {
         return viewportY;
     }

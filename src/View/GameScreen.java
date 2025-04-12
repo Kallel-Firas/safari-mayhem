@@ -1,26 +1,16 @@
 package View;
 
-import Model.Dirt;
-import Model.Land;
-import Model.Landscape;
 import Model.Safari;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
-import java.util.ArrayList;
-import java.util.List;
-import javax.swing.Timer;
 
 public class GameScreen extends JFrame {
     GameMap gameMap;
     MiniMap miniMap;
     Safari safari = new Safari(1, 1, "1/1/2021");
-    public GameScreen() {
 
+    public GameScreen() {
 
 
         setTitle("Safari Mayhem");

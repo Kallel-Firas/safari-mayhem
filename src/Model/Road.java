@@ -6,7 +6,6 @@ public class Road extends Land {
     private boolean exit = false;
 
 
-
     public void setEntrance(boolean entrance) {
         this.entrance = entrance;
     }
