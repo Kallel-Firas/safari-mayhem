@@ -32,6 +32,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
 
     private Map<Object, BufferedImage> terrainImages = new HashMap<>();
     private Map<Object, BufferedImage> entityImages = new HashMap<>();
+    private Map<String, BufferedImage> roadImages = new HashMap<>();
 
     private final int textureResolution = 32;
 
@@ -47,34 +48,71 @@ public class GameMap extends JPanel implements MouseWheelListener {
     private BufferedImage poacherImage;
     private BufferedImage rangerImage;
 
+    private Set<Point> roadStartPoints; // Store valid road start points
+
     public GameMap(Safari safari) {
         this.safari = safari;
+        initializeRoadStartPoints(); // Initialize the road start points
         try {
+            // Load terrain images
             terrainImages.put(Water.class, ImageIO.read(new File("resources/water.png")));
-            // do like the line above for the following lines
             terrainImages.put(Dirt.class, ImageIO.read(new File("resources/dirt.png")));
             terrainImages.put(Tree.class, ImageIO.read(new File("resources/tree.png")));
             terrainImages.put(Grass.class, ImageIO.read(new File("resources/grass.png")));
             terrainImages.put(Bush.class, ImageIO.read(new File("resources/bush.png")));
-            // load the images for the entities into the entityImages map
+            terrainImages.put(Road.class, ImageIO.read(new File("resources/road1.jpg"))); // Default road image
+
+            // Load road variant images
+            roadImages.put("road1", ImageIO.read(new File("resources/road1.jpg")));
+            roadImages.put("road2", ImageIO.read(new File("resources/road2withoutback.png")));
+            roadImages.put("road3", ImageIO.read(new File("resources/road3withoutback.png")));
+            roadImages.put("road4", ImageIO.read(new File("resources/road4.jpg")));
+            roadImages.put("road5", ImageIO.read(new File("resources/road5withoutback.png")));
+            roadImages.put("road6", ImageIO.read(new File("resources/road6withoutback.png")));
+
+            // Load entity images
             entityImages.put(Sheep.class, ImageIO.read(new File("resources/sheep.png")));
-            //entityImages.put(BabySheep.class, ImageIO.read(new File("resources/baby_sheep.png")));
             entityImages.put(Cheetah.class, ImageIO.read(new File("resources/cheetah.png")));
-            //entityImages.put(BabyCheetah.class, ImageIO.read(new File("resources/baby_cheetah.png")));
             entityImages.put(Elephant.class, ImageIO.read(new File("resources/elephant.png")));
-            //entityImages.put(BabyElephant.class, ImageIO.read(new File("resources/baby_elephant.png")));
             entityImages.put(Lion.class, ImageIO.read(new File("resources/lion.png")));
-            //entityImages.put(BabyLion.class, ImageIO.read(new File("resources/baby_lion.png")));
             entityImages.put(Poacher.class, ImageIO.read(new File("resources/poacher.png")));
             entityImages.put(Ranger.class, ImageIO.read(new File("resources/ranger.png")));
 
-            //entityImages.put(Jeep.class, ImageIO.read(new File("resources/jeep.png")));
-
         } catch (IOException e) {
-            System.out.println("Error loading image");
+            System.out.println("Error loading image: " + e.getMessage());
+            e.printStackTrace();
         }
         setPreferredSize(new Dimension(50*textureResolution/2, 50*textureResolution/2));
         addMouseWheelListener(this);
+    }
+
+    private void initializeRoadStartPoints() {
+        roadStartPoints = new HashSet<>();
+        
+        // Get the map size
+        int mapWidth = 50;  // Assuming 50x50 map, adjust if different
+        int mapHeight = 50;
+        
+        // Add entry points on each side
+        // Left side (3 points)
+        roadStartPoints.add(new Point(0, mapHeight/4));
+        roadStartPoints.add(new Point(0, mapHeight/2));
+        roadStartPoints.add(new Point(0, 3*mapHeight/4));
+        
+        // Right side (3 points)
+        roadStartPoints.add(new Point(mapWidth-1, mapHeight/4));
+        roadStartPoints.add(new Point(mapWidth-1, mapHeight/2));
+        roadStartPoints.add(new Point(mapWidth-1, 3*mapHeight/4));
+        
+        // Top side (3 points)
+        roadStartPoints.add(new Point(mapWidth/4, 0));
+        roadStartPoints.add(new Point(mapWidth/2, 0));
+        roadStartPoints.add(new Point(3*mapWidth/4, 0));
+        
+        // Bottom side (3 points)
+        roadStartPoints.add(new Point(mapWidth/4, mapHeight-1));
+        roadStartPoints.add(new Point(mapWidth/2, mapHeight-1));
+        roadStartPoints.add(new Point(3*mapWidth/4, mapHeight-1));
     }
 
     public void update(List<List<Landscape>> terrain, List<Entity> entities) {
@@ -82,45 +120,55 @@ public class GameMap extends JPanel implements MouseWheelListener {
         this.entities = entities;
     }
 
-//    @Override
-//    public void paintComponent(Graphics g) {
-//        super.paintComponent(g);
-//        if (terrain == null) {
-//            return;
-//        }
-//        for (int x = 0; x < terrain.size(); x++) {
-//            for (int y = 0; y < terrain.size(); y++) {
-//                Landscape currentTile = terrain.get(x).get(y);
-//                BufferedImage image = terrainImages.get(currentTile.getClass());
-//                g.drawImage(image, x*textureResolution, y*textureResolution, null);
-//            }
-//        }
-//        // draw entities
-//        for (Object entity : entities) {
-//            BufferedImage image = entityImages.get(entity.getClass());
-//            if (entity instanceof Animal animal) {
-//                g.drawImage(image, animal.getCurrentX()*textureResolution, animal.getCurrentY()*textureResolution, null);
-//            }
-//        }
-////        g.drawImage(entityImages.get(Cheetah.class), 0, 0, null);
-////        g.drawImage(waterImage, 16, 0, null);
-////        g.drawImage(treeImage, 16*16, 16*15, null);
-////        g.drawImage(cheetahImage, 16*32, 16*32, null);
-////        g.drawImage(babyCheetahImage, 16*16, 16*16, null);
-////        g.drawImage(babySheepImage, 16*16, 16*17, null);
-//    }
-
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (terrain == null) {
             return;
         }
+
+        // Draw terrain
         for (int x = viewportX; x < viewportX + viewportWidth && x < terrain.size(); x++) {
             for (int y = viewportY; y < viewportY + viewportHeight && y < terrain.get(x).size(); y++) {
                 Landscape currentTile = terrain.get(x).get(y);
-                BufferedImage image = terrainImages.get(currentTile.getClass());
-                g.drawImage(image, (x - viewportX) * textureResolution, (y - viewportY) * textureResolution, null);
+                BufferedImage image;
+                
+                // First draw the dirt texture if it's a road
+                if (currentTile instanceof Road) {
+                    image = terrainImages.get(Dirt.class);
+                    if (image != null) {
+                        g.drawImage(image, (x - viewportX) * textureResolution, 
+                                  (y - viewportY) * textureResolution, 
+                                  textureResolution, textureResolution, null);
+                    }
+                    
+                    // Then draw the road image on top
+                    Road road = (Road) currentTile;
+                    image = roadImages.get(road.getImageKey());
+                    if (image == null) {
+                        image = roadImages.get("road1");
+                    }
+                } else {
+                    image = terrainImages.get(currentTile.getClass());
+                }
+                
+                if (image != null) {
+                    g.drawImage(image, (x - viewportX) * textureResolution, 
+                              (y - viewportY) * textureResolution, 
+                              textureResolution, textureResolution, null);
+                }
+
+                // Draw white boxes at road start points
+                if (roadStartPoints.contains(new Point(x, y))) {
+                    g.setColor(new Color(255, 255, 255, 128)); // Semi-transparent white
+                    g.fillRect((x - viewportX) * textureResolution, 
+                             (y - viewportY) * textureResolution, 
+                             textureResolution, textureResolution);
+                    g.setColor(Color.BLACK);
+                    g.drawRect((x - viewportX) * textureResolution, 
+                             (y - viewportY) * textureResolution, 
+                             textureResolution, textureResolution);
+                }
             }
         }
 
@@ -189,5 +237,9 @@ public class GameMap extends JPanel implements MouseWheelListener {
 
     public void setMiniMap(MiniMap miniMap) {
         this.miniMap = miniMap;
+    }
+
+    public boolean isValidRoadStartPoint(int x, int y) {
+        return roadStartPoints.contains(new Point(x, y));
     }
 }

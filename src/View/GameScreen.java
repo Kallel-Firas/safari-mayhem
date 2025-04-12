@@ -140,6 +140,96 @@ public class GameScreen extends JFrame {
         // Check if the position is water
         boolean isWater = safari.getLandscapes().get(x).get(y) instanceof Water;
 
+        // Check if the position is dirt (for road placement)
+        boolean isDirt = safari.getLandscapes().get(x).get(y) instanceof Dirt;
+
+        // Handle road placement
+        if (selectedItemType.equals("road")) {
+            // Check if this is the first road placement
+            boolean isFirstRoad = safari.getLandscapes().stream()
+                .flatMap(row -> row.stream())
+                .noneMatch(tile -> tile instanceof Road);
+
+            if (isFirstRoad) {
+                // For first road, must start from a white box
+                if (!gameMap.isValidRoadStartPoint(x, y)) {
+                    refundPurchase();
+                    showPlacementError("Roads must start from one of the white boxes on the edges!");
+                    return;
+                }
+            } else {
+                // For subsequent roads, must be adjacent to an existing road
+                boolean isAdjacentToRoad = false;
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dy = -1; dy <= 1; dy++) {
+                        if (dx == 0 && dy == 0) continue;
+                        int nx = x + dx;
+                        int ny = y + dy;
+                        if (nx >= 0 && nx < safari.getLandscapes().size() && 
+                            ny >= 0 && ny < safari.getLandscapes().get(0).size()) {
+                            if (safari.getLandscapes().get(nx).get(ny) instanceof Road) {
+                                isAdjacentToRoad = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (isAdjacentToRoad) break;
+                }
+                
+                if (!isAdjacentToRoad) {
+                    refundPurchase();
+                    showPlacementError("Roads must be connected to existing roads!");
+                    return;
+                }
+            }
+
+            if (!isDirt) {
+                refundPurchase();
+                showPlacementError("Roads can only be placed on dirt terrain!");
+                return;
+            }
+
+            if (isOccupiedByAnimal || hasVegetation) {
+                String errorMessage = "Cannot place road here!\n";
+                if (isOccupiedByAnimal) {
+                    errorMessage += "Position is occupied by an animal.";
+                } else if (hasVegetation) {
+                    errorMessage += "Position has vegetation (tree/bush).";
+                }
+                refundPurchase();
+                showPlacementError(errorMessage);
+                return;
+            }
+
+            // Place the road
+            String imageKey;
+            switch (selectedItem) {
+                case "Straight Road": imageKey = "road1"; break;
+                case "Corner Road": imageKey = "road2"; break;
+                case "T-Junction Road": imageKey = "road3"; break;
+                case "Crossroad": imageKey = "road4"; break;
+                case "End Road": imageKey = "road5"; break;
+                case "Side Road": imageKey = "road6"; break;
+                default: imageKey = "road1";
+            }
+            
+            // Check if this is an entrance or exit based on position
+            boolean isEntrance = x == 0 || y == 0; // Left or top edge
+            boolean isExit = x == safari.getLandscapes().size() - 1 || y == safari.getLandscapes().get(0).size() - 1; // Right or bottom edge
+            
+            Road road = new Road(x, y, isEntrance, isExit);
+            road.setImageKey(imageKey);
+            safari.setLandscape(x, y, road);
+            System.out.println("Road placed successfully");
+            
+            selectedItem = null;
+            selectedItemType = null;
+            setCursor(Cursor.getDefaultCursor());
+            gameMap.repaint();
+            miniMap.repaint();
+            return;
+        }
+
         // Handle ranger placement
         if (selectedItemType.equals("ranger")) {
             if (isOccupiedByAnimal || hasVegetation || isWater) {
@@ -241,6 +331,7 @@ public class GameScreen extends JFrame {
             case "Grass": refundAmount = 50; break;
             case "Water": refundAmount = 200; break;
             case "Dirt": refundAmount = 20; break;
+            case "Road": refundAmount = 250; break;
         }
         balance += refundAmount;
         balanceLabel.setText("Balance: $" + balance);
@@ -313,10 +404,13 @@ public class GameScreen extends JFrame {
         JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Add placeholder for roads
-        JLabel comingSoon = new JLabel("Roads Coming Soon!");
-        comingSoon.setFont(new Font("Arial", Font.BOLD, 16));
-        panel.add(comingSoon);
+        // Add different types of roads with their prices
+        addShopItem(panel, "resources/road1.jpg", "Straight Road", 250, "road");
+        addShopItem(panel, "resources/road2withoutback.png", "Corner Road", 250, "road");
+        addShopItem(panel, "resources/road3withoutback.png", "T-Junction Road", 250, "road");
+        addShopItem(panel, "resources/road4.jpg", "Crossroad", 250, "road");
+        addShopItem(panel, "resources/road5withoutback.png", "End Road", 250, "road");
+        addShopItem(panel, "resources/road6withoutback.png", "Side Road", 250, "road");
 
         return new JScrollPane(panel);
     }
