@@ -51,18 +51,18 @@ public class Safari {
             }
         }
         // Add some Animals to the landscape
-        Herd<Elephant> elephantHerd = new Herd<>(landscapes);
+        Herd<Elephant> elephantHerd = new Herd<>(landscapes, this);
         elephantHerd.generatePopulation("Elephant");
-//        Herd<Lion> lionHerd = new Herd<>(landscapes);
-//        lionHerd.generatePopulation("Lion");
-//        Herd<Cheetah> cheetahHerd = new Herd<>(landscapes);
-//        cheetahHerd.generatePopulation("Cheetah");
-//        Herd<Sheep> sheepHerd = new Herd<>(landscapes);
-//        sheepHerd.generatePopulation("Sheep");
+        Herd<Lion> lionHerd = new Herd<>(landscapes, this);
+        lionHerd.generatePopulation("Lion");
+        Herd<Cheetah> cheetahHerd = new Herd<>(landscapes, this);
+        cheetahHerd.generatePopulation("Cheetah");
+        Herd<Sheep> sheepHerd = new Herd<>(landscapes, this);
+        sheepHerd.generatePopulation("Sheep");
         herdList.add(elephantHerd);
-//        herdList.add(lionHerd);
-//        herdList.add(cheetahHerd);
-//        herdList.add(sheepHerd);
+        herdList.add(lionHerd);
+        herdList.add(cheetahHerd);
+        herdList.add(sheepHerd);
 
         // Add some vegetation to the landscape
         for (int i = 0; i < 50; i++) {
@@ -157,6 +157,27 @@ public class Safari {
         }
         for (Herd herd : deadHerds) {
             herdList.remove(herd);
+        }
+    }
+
+    public void removeEntityAt(int x, int y, Class <? extends Entity> entityClass) {
+        if (Animal.class.isAssignableFrom(entityClass)) {
+            for (Herd herd : herdList){
+                for (Object animal : herd.getAnimalList()) {
+                    if (((Animal)animal).getCurrentX() == x && ((Animal)animal).getCurrentY() == y) {
+                        herd.removeAnimal((Animal) animal);
+                        return;
+                    }
+                }
+            }
+        }
+        else {
+            for (int i = 0; i < vegetationList.size(); i++) {
+                if (vegetationList.get(i).getCurrentX() == x && vegetationList.get(i).getCurrentY() == y) {
+                    vegetationList.remove(i);
+                    return;
+                }
+            }
         }
     }
 }

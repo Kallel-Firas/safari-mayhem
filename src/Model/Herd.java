@@ -1,6 +1,7 @@
 package Model;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -15,22 +16,24 @@ public class Herd<T extends Animal> {
     private List<List<Landscape>> landscapeList;
     private int thirstMeter;
     private int hungerMeter;
-    private final int thirstRate = 3;
-    private final int hungerRate = 2; // Changed from 0 to 1 to enable hunger mechanics
+    private final int thirstRate = 2;
+    private final int hungerRate = 1; // Changed from 0 to 1 to enable hunger mechanics
     private List<Entity> entities;
     private boolean isMoving = false;
     private int[] moveToLocation = null;
     private int restingTime = 0; // Counter for how long the herd has been resting
     private final int maxRestingTime = 50; // Maximum time to rest before moving again
     private Class<? extends Entity> food;
+    private Safari safari;
 
-    public Herd(List<List<Landscape>> landscapeList) {
+    public Herd(List<List<Landscape>> landscapeList, Safari safari) {
         this.animalList = new ArrayList<>();
         this.landscapeList = landscapeList;
         thirstMeter = 100;
         thirsty = false;
         hungerMeter = 100;
         hungry = false;
+        this.safari = safari;
     }
 
     public void updateLandscape(List<List<Landscape>> landscapeList) {
@@ -117,34 +120,19 @@ public class Herd<T extends Animal> {
         if (animalList.isEmpty()) {
             return; // No animals to update
         }
-        // Check if any animal has reached the destination
-        if (isMoving && moveToLocation != null) {
-            boolean allArrived = false;
-            for (T animal : animalList) {
-               if (animal.getCurrentX() == moveToLocation[0] && animal.getCurrentY() == moveToLocation[1]) {
-                    allArrived = true;
-                    break;
-               }
-            }
-            
-            if (allArrived) {
-                isMoving = false;
-                System.out.println("Herd has arrived at destination.");
-            }
-        }
 
         // Update thirst and hunger
         thirstMeter -= thirstRate;
         hungerMeter -= hungerRate;
-        
+
         if (thirstMeter <= 30) {
             thirsty = true;
         }
-        
+
         if (hungerMeter <= 30) {
             hungry = true;
         }
-        
+
         // Handle death from thirst or hunger
         if (thirstMeter <= 0 && !animalList.isEmpty()) {
             animalList.removeLast();
@@ -154,12 +142,39 @@ public class Herd<T extends Animal> {
             hungerMeter = 10;
         }
 
+        // Always check for resources in vision radius first if thirsty or hungry
+        if (thirsty || hungry) {
+            boolean resourceFound = checkForResourcesInVision();
+            if (resourceFound) {
+                return; // Resources found and being approached, no need for further movement
+            }
+        }
+
+        // Check if any animal has reached the destination
+        if (isMoving && moveToLocation != null) {
+            boolean allArrived = false;
+            for (T animal : animalList) {
+                if (animal.getCurrentX() == moveToLocation[0] && animal.getCurrentY() == moveToLocation[1]) {
+                    allArrived = true;
+                    break;
+                }
+            }
+
+            if (allArrived) {
+                isMoving = false;
+                System.out.println("Herd is starting to rest.");
+                isSleeping = true;
+                System.out.println("Herd has arrived at destination.");
+            }
+        }
+
         // Continue movement if the herd is currently moving
         if (isMoving && moveToLocation != null) {
+            System.out.println("Herd still moving towards: " + moveToLocation[0] + ", " + moveToLocation[1]);
             MoveTo(moveToLocation[0], moveToLocation[1]);
             return;
         }
-        
+
         // Handle different states
         if (!isSleeping && !thirsty && !hungry) {
             // If well-fed and not sleeping, start resting
@@ -167,33 +182,31 @@ public class Herd<T extends Animal> {
             chooseNewLocation();
             MoveTo(moveToLocation[0], moveToLocation[1]);
             if (restingTime == 0) {
-                System.out.println("Herd is starting to rest.");
-                isSleeping = true;
                 restingTime = 1;
-            } 
+            }
             // If already resting, increment resting time
             else if (restingTime < maxRestingTime) {
                 restingTime++;
-            } 
+            }
             // If rested enough, choose a new location to move to
             else {
                 System.out.println("Herd is done resting and will move to a new location.");
                 chooseNewLocation();
                 restingTime = 0;
             }
-        } 
+        }
         // If sleeping but now thirsty or hungry, wake up and search for resources
         else if (isSleeping && (thirsty || hungry)) {
             System.out.println("Herd woke up due to hunger or thirst.");
             isSleeping = false;
             restingTime = 0;
-            
+
             if (thirsty) {
                 SearchForWater();
             } else if (hungry) {
                 SearchForFood();
             }
-        } 
+        }
         // If not sleeping and thirsty or hungry, search for resources
         else if (!isSleeping && (thirsty || hungry)) {
             if (thirsty) {
@@ -202,6 +215,87 @@ public class Herd<T extends Animal> {
                 SearchForFood();
             }
         }
+    }
+
+    // Add a new method to check for resources in vision radius
+    private boolean checkForResourcesInVision() {
+        // First check if we can drink or eat already
+        if (thirsty && CanDrink()) {
+            thirstMeter = 100;
+            thirsty = false;
+            for (T animal : animalList) {
+                animal.Drink();
+            }
+            System.out.println("Herd found water and is drinking.");
+            chooseNewLocation();
+            return true;
+        }
+
+        if (hungry && CanEat()) {
+            hungerMeter = 100;
+            hungry = false;
+            for (T animal : animalList) {
+                animal.Eat();
+            }
+            System.out.println("Herd found food and is eating.");
+            chooseNewLocation();
+            return true;
+        }
+
+        // Check for water in vision radius if thirsty
+        if (thirsty) {
+            for (T animal : animalList) {
+                for (int i = -animal.getVisionRadius(); i <= animal.getVisionRadius(); i++) {
+                    for (int j = -animal.getVisionRadius(); j <= animal.getVisionRadius(); j++) {
+                        int checkX = animal.getCurrentX() + i;
+                        int checkY = animal.getCurrentY() + j;
+
+                        if (InsideMap(checkX, checkY) && inRange(checkX, checkY) &&
+                                landscapeList.get(checkX).get(checkY) instanceof Water) {
+                            discoveredWaterLocation = new int[]{checkX, checkY};
+                            System.out.println("Herd spotted water during movement at: (" +
+                                    discoveredWaterLocation[0] + ", " + discoveredWaterLocation[1] + ")");
+                            MoveTo(discoveredWaterLocation[0], discoveredWaterLocation[1]);
+                            isMoving = true;
+                            moveToLocation = discoveredWaterLocation;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check for food in vision radius if hungry
+        if (hungry) {
+            for (T animal : animalList) {
+                for (int i = -animal.getVisionRadius(); i <= animal.getVisionRadius(); i++) {
+                    for (int j = -animal.getVisionRadius(); j <= animal.getVisionRadius(); j++) {
+                        int checkX = animal.getCurrentX() + i;
+                        int checkY = animal.getCurrentY() + j;
+
+                        if (InsideMap(checkX, checkY) && inRange(checkX, checkY)) {
+                            // Check for appropriate food sources
+                            for (Entity entity : entities) {
+                                if ((isHerbivoreHerd() && entity instanceof Vegetation) ||
+                                        (isCarnivoreHerd() && entity instanceof Herbivorous)) {
+                                    if (entity.getCurrentX() == checkX && entity.getCurrentY() == checkY) {
+                                        discoveredFoodLocation = new int[]{checkX, checkY};
+                                        System.out.println("Herd spotted food during movement at: (" +
+                                                discoveredFoodLocation[0] + ", " + discoveredFoodLocation[1] + ")");
+                                        MoveTo(discoveredFoodLocation[0], discoveredFoodLocation[1]);
+                                        isMoving = true;
+                                        moveToLocation = discoveredFoodLocation;
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return false; // No resources found in vision radius
     }
 
     // Choose a new random location for the herd to move to
@@ -247,8 +341,8 @@ public class Herd<T extends Animal> {
     // Check if a location is valid for the herd to move to
     private boolean isValidDestination(int x, int y) {
         // Check if the location is water (can't rest on water)
-        if (x >= 0 && x < 50 && y >= 0 && y < 50 && 
-            landscapeList.get(x).get(y) instanceof Water) {
+        if (x >= 0 && x < 50 && y >= 0 && y < 50 &&
+                !(landscapeList.get(x).get(y) instanceof Dirt)) {
             return false;
         }
         
@@ -279,24 +373,35 @@ public class Herd<T extends Animal> {
 
     private boolean CanDrink() {
         for (T animal : animalList) {
-            if (animal.getCurrentX() + 1 < 50
-                    && landscapeList.get(animal.getCurrentX() + 1).get(animal.getCurrentY()) instanceof Water) {
-                return true;
-            }
-            if (animal.getCurrentX() - 1 >= 0
-                    && landscapeList.get(animal.getCurrentX() - 1).get(animal.getCurrentY()) instanceof Water) {
-                return true;
-            }
-            if (animal.getCurrentY() + 1 < 50
-                    && landscapeList.get(animal.getCurrentX()).get(animal.getCurrentY() + 1) instanceof Water) {
-                return true;
-            }
-            if (animal.getCurrentY() - 1 >= 0
-                    && landscapeList.get(animal.getCurrentX()).get(animal.getCurrentY() - 1) instanceof Water) {
-                return true;
+            int x = animal.getCurrentX();
+            int y = animal.getCurrentY();
+
+            int[][] directions = {
+                    {1, 0},  // right
+                    {-1, 0}, // left
+                    {0, 1},  // down
+                    {0, -1}  // up
+            };
+
+            for (int[] dir : directions) {
+                int newX = x + dir[0];
+                int newY = y + dir[1];
+
+                if (isWithinBounds(newX, newY) && isWaterAt(newX, newY)) {
+                    replaceWithDirt(newX, newY);
+                    return true;
+                }
             }
         }
         return false;
+    }
+
+    private boolean isWaterAt(int x, int y) {
+        return landscapeList.get(x).get(y) instanceof Water;
+    }
+
+    private void replaceWithDirt(int x, int y) {
+        landscapeList.get(x).set(y, new Dirt());
     }
 
     boolean isEntityThere(int x, int y, Class<? extends Entity> entityClass) {
@@ -310,23 +415,37 @@ public class Herd<T extends Animal> {
     }
 
     private boolean CanEat() {
-        // Check if any animal is adjacent to food sources
         for (T animal : animalList) {
-            // Check all adjacent tiles
-                if (animal.getCurrentX() + 1 < 50 && isEntityThere(animal.getCurrentX() + 1, animal.getCurrentY(), food)){
-                    return true;
-                }
-                if (animal.getCurrentX() - 1 >= 0 && isEntityThere(animal.getCurrentX() - 1, animal.getCurrentY(), food)){
-                    return true;
-                }
-                if (animal.getCurrentY() + 1 < 50 && isEntityThere(animal.getCurrentX(), animal.getCurrentY() + 1, food)){
-                    return true;
-                }
-                if (animal.getCurrentY() - 1 >= 0 && isEntityThere(animal.getCurrentX(), animal.getCurrentY() - 1, food)){
+            int x = animal.getCurrentX();
+            int y = animal.getCurrentY();
+
+            // Define the four adjacent positions (right, left, down, up)
+            int[][] directions = {
+                    {1, 0},  // right
+                    {-1, 0}, // left
+                    {0, 1},  // down
+                    {0, -1}  // up
+            };
+
+            for (int[] dir : directions) {
+                int newX = x + dir[0];
+                int newY = y + dir[1];
+
+                if (isWithinBounds(newX, newY) && isEntityThere(newX, newY, food)) {
+                    removeEntityAt(newX, newY, food);
                     return true;
                 }
             }
+        }
         return false;
+    }
+
+    private boolean isWithinBounds(int x, int y) {
+        return x >= 0 && x < 50 && y >= 0 && y < 50;
+    }
+
+    private void removeEntityAt(int x, int y, Class<? extends Entity> entityClass) {
+        safari.removeEntityAt(x, y, entityClass);
     }
 
     private boolean inRange(int x, int y) {
@@ -349,8 +468,80 @@ public class Herd<T extends Animal> {
         return getAnimalList().isEmpty();
     }
 
+//    private void SearchForWater() {
+//        isMoving = true;
+//        moveToLocation = null;
+//        // First check if any animal can drink already
+//        if (CanDrink()) {
+//            thirstMeter = 100;
+//            thirsty = false;
+//            for (T animal : animalList) {
+//                animal.Drink();
+//            }
+//            System.out.println("Herd found water and is drinking.");
+//            chooseNewLocation();
+//            return;
+//        }
+//
+//        // Use previously discovered water if available
+//        if (discoveredWaterLocation != null) {
+//            if (!inRange(discoveredWaterLocation[0], discoveredWaterLocation[1])) {
+//                // Move toward the water source
+//                System.out.println("Herd is moving to previously discovered water at: (" +
+//                                   discoveredWaterLocation[0] + ", " + discoveredWaterLocation[1] + ")");
+//                MoveTo(discoveredWaterLocation[0], discoveredWaterLocation[1]);
+//                return;
+//            } else if (inRange(discoveredWaterLocation[0], discoveredWaterLocation[1])
+//                    && !(landscapeList.get(discoveredWaterLocation[0]).get(discoveredWaterLocation[1]) instanceof Water)) {
+//                // Water source has changed or dried up
+//                System.out.println("Water source has changed, searching for new water.");
+//                discoveredWaterLocation = null;
+//            } else if (inRange(discoveredWaterLocation[0], discoveredWaterLocation[1])
+//                    && landscapeList.get(discoveredWaterLocation[0]).get(discoveredWaterLocation[1]) instanceof Water) {
+//                // Water is in range and still exists, move to it
+//                System.out.println("Herd is approaching visible water.");
+//                MoveTo(discoveredWaterLocation[0], discoveredWaterLocation[1]);
+//                return;
+//            }
+//        }
+//
+//        // Search for water in each animal's vision radius
+//        for (T animal : animalList) {
+//            for (int i = -animal.getVisionRadius(); i <= animal.getVisionRadius(); i++) {
+//                for (int j = -animal.getVisionRadius(); j <= animal.getVisionRadius(); j++) {
+//                    if (InsideMap(animal.getCurrentX() + i, animal.getCurrentY() + j)
+//                            && inRange(animal.getCurrentX() + i, animal.getCurrentY() + j)
+//                            && landscapeList.get(animal.getCurrentX() + i).get(animal.getCurrentY() + j) instanceof Water) {
+//                        discoveredWaterLocation = new int[]{animal.getCurrentX() + i, animal.getCurrentY() + j};
+//                        System.out.println("Herd discovered water at: (" + discoveredWaterLocation[0] + ", " + discoveredWaterLocation[1] + ")");
+//                        MoveTo(discoveredWaterLocation[0], discoveredWaterLocation[1]);
+//                        return;
+//                    }
+//                }
+//            }
+//        }
+//
+//        // If no water is found, move to a random location to explore
+//        int randomX = (int) (Math.random() * 50);
+//        int randomY = (int) (Math.random() * 50);
+//
+//        // Try to find a valid position
+//        int attempts = 0;
+//        while ((!InsideMap(randomX, randomY) || !isValidDestination(randomX, randomY)) && attempts < 10) {
+//            randomX = (int) (Math.random() * 50);
+//            randomY = (int) (Math.random() * 50);
+//            attempts++;
+//        }
+//
+//        System.out.println("No water found. Herd is exploring randomly at: (" + randomX + ", " + randomY + ")");
+//        moveToLocation = new int[]{randomX, randomY};
+//        MoveTo(randomX, randomY);
+//    }
+
     private void SearchForWater() {
         isMoving = true;
+        moveToLocation = null;
+
         // First check if any animal can drink already
         if (CanDrink()) {
             thirstMeter = 100;
@@ -359,16 +550,18 @@ public class Herd<T extends Animal> {
                 animal.Drink();
             }
             System.out.println("Herd found water and is drinking.");
+            chooseNewLocation();
             return;
         }
-        
+
         // Use previously discovered water if available
         if (discoveredWaterLocation != null) {
             if (!inRange(discoveredWaterLocation[0], discoveredWaterLocation[1])) {
                 // Move toward the water source
-                System.out.println("Herd is moving to previously discovered water at: (" + 
-                                   discoveredWaterLocation[0] + ", " + discoveredWaterLocation[1] + ")");
+                System.out.println("Herd is moving to previously discovered water at: (" +
+                        discoveredWaterLocation[0] + ", " + discoveredWaterLocation[1] + ")");
                 MoveTo(discoveredWaterLocation[0], discoveredWaterLocation[1]);
+                moveToLocation = discoveredWaterLocation;
                 return;
             } else if (inRange(discoveredWaterLocation[0], discoveredWaterLocation[1])
                     && !(landscapeList.get(discoveredWaterLocation[0]).get(discoveredWaterLocation[1]) instanceof Water)) {
@@ -380,11 +573,13 @@ public class Herd<T extends Animal> {
                 // Water is in range and still exists, move to it
                 System.out.println("Herd is approaching visible water.");
                 MoveTo(discoveredWaterLocation[0], discoveredWaterLocation[1]);
+                moveToLocation = discoveredWaterLocation;
                 return;
             }
         }
-        
+
         // Search for water in each animal's vision radius
+        boolean foundWater = false;
         for (T animal : animalList) {
             for (int i = -animal.getVisionRadius(); i <= animal.getVisionRadius(); i++) {
                 for (int j = -animal.getVisionRadius(); j <= animal.getVisionRadius(); j++) {
@@ -394,31 +589,129 @@ public class Herd<T extends Animal> {
                         discoveredWaterLocation = new int[]{animal.getCurrentX() + i, animal.getCurrentY() + j};
                         System.out.println("Herd discovered water at: (" + discoveredWaterLocation[0] + ", " + discoveredWaterLocation[1] + ")");
                         MoveTo(discoveredWaterLocation[0], discoveredWaterLocation[1]);
-                        return;
+                        moveToLocation = discoveredWaterLocation;
+                        foundWater = true;
+                        break;
                     }
                 }
+                if (foundWater) break;
             }
+            if (foundWater) break;
         }
-        
+
         // If no water is found, move to a random location to explore
-        int randomX = (int) (Math.random() * 50);
-        int randomY = (int) (Math.random() * 50);
-        
-        // Try to find a valid position
-        int attempts = 0;
-        while ((!InsideMap(randomX, randomY) || !isValidDestination(randomX, randomY)) && attempts < 10) {
-            randomX = (int) (Math.random() * 50);
-            randomY = (int) (Math.random() * 50);
-            attempts++;
+        if (!foundWater) {
+            int randomX = (int) (Math.random() * 50);
+            int randomY = (int) (Math.random() * 50);
+
+            // Try to find a valid position
+            int attempts = 0;
+            while ((!InsideMap(randomX, randomY) || !isValidDestination(randomX, randomY)) && attempts < 10) {
+                randomX = (int) (Math.random() * 50);
+                randomY = (int) (Math.random() * 50);
+                attempts++;
+            }
+
+            System.out.println("No water found. Herd is exploring randomly at: (" + randomX + ", " + randomY + ")");
+            moveToLocation = new int[]{randomX, randomY};
+            MoveTo(randomX, randomY);
         }
-        
-        System.out.println("No water found. Herd is exploring randomly at: (" + randomX + ", " + randomY + ")");
-        moveToLocation = new int[]{randomX, randomY};
-        MoveTo(randomX, randomY);
     }
+
+//    private void SearchForFood() {
+//        isMoving = true;
+//        // First check if any animal can eat already
+//        if (CanEat()) {
+//            hungerMeter = 100;
+//            hungry = false;
+//            for (T animal : animalList) {
+//                animal.Eat();
+//            }
+//            System.out.println("Herd found food and is eating.");
+//            chooseNewLocation();
+//            return;
+//        }
+//
+//        // Use previously discovered food source if available
+//        if (discoveredFoodLocation != null) {
+//            if (!inRange(discoveredFoodLocation[0], discoveredFoodLocation[1])) {
+//                // Move toward the food source
+//                System.out.println("Herd is moving to previously discovered food at: (" +
+//                                  discoveredFoodLocation[0] + ", " + discoveredFoodLocation[1] + ")");
+//                MoveTo(discoveredFoodLocation[0], discoveredFoodLocation[1]);
+//                return;
+//            } else {
+//                // Check if food is still there
+//                boolean foodExists = false;
+//                for (Entity entity : entities) {
+//                    if ((isHerbivoreHerd() && entity instanceof Vegetation) ||
+//                        (isCarnivorousHerd() && entity instanceof Animal && !(entity instanceof Carnivorous))) {
+//                        if (entity.getCurrentX() == discoveredFoodLocation[0] &&
+//                            entity.getCurrentY() == discoveredFoodLocation[1]) {
+//                            foodExists = true;
+//                            break;
+//                        }
+//                    }
+//                }
+//
+//                if (!foodExists) {
+//                    // Food source is gone
+//                    System.out.println("Food source has been depleted, searching for new food.");
+//                    discoveredFoodLocation = null;
+//                } else {
+//                    // Food is in range and still exists, move to it
+//                    System.out.println("Herd is approaching visible food.");
+//                    MoveTo(discoveredFoodLocation[0], discoveredFoodLocation[1]);
+//                    return;
+//                }
+//            }
+//        }
+//
+//        // Search for food in each animal's vision radius
+//        for (T animal : animalList) {
+//            for (int i = -animal.getVisionRadius(); i <= animal.getVisionRadius(); i++) {
+//                for (int j = -animal.getVisionRadius(); j <= animal.getVisionRadius(); j++) {
+//                    int checkX = animal.getCurrentX() + i;
+//                    int checkY = animal.getCurrentY() + j;
+//
+//                    if (InsideMap(checkX, checkY) && inRange(checkX, checkY)) {
+//                        // Check for appropriate food sources
+//                        for (Entity entity : entities) {
+//                            if ((isHerbivoreHerd() && entity instanceof Vegetation) ||
+//                                (isCarnivorousHerd() && entity instanceof Animal && !(entity instanceof Carnivorous))) {
+//                                if (entity.getCurrentX() == checkX && entity.getCurrentY() == checkY) {
+//                                    discoveredFoodLocation = new int[]{checkX, checkY};
+//                                    System.out.println("Herd discovered food at: (" + discoveredFoodLocation[0] + ", " + discoveredFoodLocation[1] + ")");
+//                                    MoveTo(discoveredFoodLocation[0], discoveredFoodLocation[1]);
+//                                    return;
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//        // If no food is found, move to a random location to explore
+//        int randomX = (int) (Math.random() * 50);
+//        int randomY = (int) (Math.random() * 50);
+//
+//        // Try to find a valid position
+//        int attempts = 0;
+//        while ((!InsideMap(randomX, randomY) || !isValidDestination(randomX, randomY)) && attempts < 10) {
+//            randomX = (int) (Math.random() * 50);
+//            randomY = (int) (Math.random() * 50);
+//            attempts++;
+//        }
+//
+//        System.out.println("No food found. Herd is exploring randomly at: (" + randomX + ", " + randomY + ")");
+//        moveToLocation = new int[]{randomX, randomY};
+//        MoveTo(randomX, randomY);
+//    }
 
     private void SearchForFood() {
         isMoving = true;
+
         // First check if any animal can eat already
         if (CanEat()) {
             hungerMeter = 100;
@@ -427,31 +720,33 @@ public class Herd<T extends Animal> {
                 animal.Eat();
             }
             System.out.println("Herd found food and is eating.");
+            chooseNewLocation();
             return;
         }
-        
+
         // Use previously discovered food source if available
         if (discoveredFoodLocation != null) {
             if (!inRange(discoveredFoodLocation[0], discoveredFoodLocation[1])) {
                 // Move toward the food source
-                System.out.println("Herd is moving to previously discovered food at: (" + 
-                                  discoveredFoodLocation[0] + ", " + discoveredFoodLocation[1] + ")");
+                System.out.println("Herd is moving to previously discovered food at: (" +
+                        discoveredFoodLocation[0] + ", " + discoveredFoodLocation[1] + ")");
                 MoveTo(discoveredFoodLocation[0], discoveredFoodLocation[1]);
+                moveToLocation = discoveredFoodLocation;
                 return;
             } else {
                 // Check if food is still there
                 boolean foodExists = false;
                 for (Entity entity : entities) {
-                    if ((isHerbivoreHerd() && entity instanceof Vegetation) || 
-                        (isCarnivoreCerd() && entity instanceof Animal && !(entity instanceof Carnivorous))) {
-                        if (entity.getCurrentX() == discoveredFoodLocation[0] && 
-                            entity.getCurrentY() == discoveredFoodLocation[1]) {
+                    if ((isHerbivoreHerd() && entity instanceof Vegetation) ||
+                            (isCarnivoreHerd() && entity instanceof Animal && !(entity instanceof Carnivorous))) {
+                        if (entity.getCurrentX() == discoveredFoodLocation[0] &&
+                                entity.getCurrentY() == discoveredFoodLocation[1]) {
                             foodExists = true;
                             break;
                         }
                     }
                 }
-                
+
                 if (!foodExists) {
                     // Food source is gone
                     System.out.println("Food source has been depleted, searching for new food.");
@@ -460,51 +755,60 @@ public class Herd<T extends Animal> {
                     // Food is in range and still exists, move to it
                     System.out.println("Herd is approaching visible food.");
                     MoveTo(discoveredFoodLocation[0], discoveredFoodLocation[1]);
+                    moveToLocation = discoveredFoodLocation;
                     return;
                 }
             }
         }
-        
+
         // Search for food in each animal's vision radius
+        boolean foundFood = false;
         for (T animal : animalList) {
             for (int i = -animal.getVisionRadius(); i <= animal.getVisionRadius(); i++) {
                 for (int j = -animal.getVisionRadius(); j <= animal.getVisionRadius(); j++) {
                     int checkX = animal.getCurrentX() + i;
                     int checkY = animal.getCurrentY() + j;
-                    
+
                     if (InsideMap(checkX, checkY) && inRange(checkX, checkY)) {
                         // Check for appropriate food sources
                         for (Entity entity : entities) {
-                            if ((isHerbivoreHerd() && entity instanceof Vegetation) || 
-                                (isCarnivoreCerd() && entity instanceof Animal && !(entity instanceof Carnivorous))) {
+                            if ((isHerbivoreHerd() && entity instanceof Vegetation) ||
+                                    (isCarnivoreHerd() && entity instanceof Animal && !(entity instanceof Carnivorous))) {
                                 if (entity.getCurrentX() == checkX && entity.getCurrentY() == checkY) {
                                     discoveredFoodLocation = new int[]{checkX, checkY};
                                     System.out.println("Herd discovered food at: (" + discoveredFoodLocation[0] + ", " + discoveredFoodLocation[1] + ")");
                                     MoveTo(discoveredFoodLocation[0], discoveredFoodLocation[1]);
-                                    return;
+                                    moveToLocation = discoveredFoodLocation;
+                                    foundFood = true;
+                                    break;
                                 }
                             }
                         }
+                        if (foundFood) break;
                     }
                 }
+                if (foundFood) break;
             }
+            if (foundFood) break;
         }
-        
+
         // If no food is found, move to a random location to explore
-        int randomX = (int) (Math.random() * 50);
-        int randomY = (int) (Math.random() * 50);
-        
-        // Try to find a valid position
-        int attempts = 0;
-        while ((!InsideMap(randomX, randomY) || !isValidDestination(randomX, randomY)) && attempts < 10) {
-            randomX = (int) (Math.random() * 50);
-            randomY = (int) (Math.random() * 50);
-            attempts++;
+        if (!foundFood) {
+            int randomX = (int) (Math.random() * 50);
+            int randomY = (int) (Math.random() * 50);
+
+            // Try to find a valid position
+            int attempts = 0;
+            while ((!InsideMap(randomX, randomY) || !isValidDestination(randomX, randomY)) && attempts < 10) {
+                randomX = (int) (Math.random() * 50);
+                randomY = (int) (Math.random() * 50);
+                attempts++;
+            }
+
+            System.out.println("No food found. Herd is exploring randomly at: (" + randomX + ", " + randomY + ")");
+            moveToLocation = new int[]{randomX, randomY};
+            MoveTo(randomX, randomY);
         }
-        
-        System.out.println("No food found. Herd is exploring randomly at: (" + randomX + ", " + randomY + ")");
-        moveToLocation = new int[]{randomX, randomY};
-        MoveTo(randomX, randomY);
     }
     
     // Helper methods to determine herd type
@@ -513,7 +817,7 @@ public class Herd<T extends Animal> {
         return animalList.get(0) instanceof Herbivorous;
     }
     
-    private boolean isCarnivoreCerd() {
+    private boolean isCarnivoreHerd() {
         if (animalList.isEmpty()) return false;
         return animalList.get(0) instanceof Carnivorous;
     }
