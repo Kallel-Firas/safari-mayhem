@@ -1,8 +1,5 @@
-import Model.Animal;
-import Model.Difficulty;
-import Model.Safari;
 import View.*;
-
+import Model.*;
 import javax.swing.*;
 import java.util.Calendar;
 import java.util.List;
@@ -15,7 +12,7 @@ public class Game {
     final Calendar StartingDate;
     Random random = new Random();
 
-    final Difficulty difficulty;
+    private final Difficulty difficulty;
     Safari safari;
 
     public Game(Difficulty difficulty, Safari safari) {
@@ -69,14 +66,24 @@ public class Game {
                 return false;
         }
     }
+    private void payRangers() {
+        for (Ranger ranger : safari.getRangers()) {
+            ranger.paySalary();
+            // Deduct salary from player's funds
+        }
+    }
+
+    private void handleRangerPoacherInteractions() {
+        for (Ranger ranger : safari.getRangers()) {
+            ranger.protectFromPoachers(safari.getPoachers());
+        }
+    }
 
     public void gameloop() {
         int hoursPassed = 0;
 
         while (!gameOver()) {
-            // Wait for 15 seconds
-//            Timer timer = new Timer(15000, null);
-            // Fast forward one hour
+            Timer timer = new Timer(15000, null);
             FastForward(1);
             hoursPassed++;
 
@@ -84,7 +91,12 @@ public class Game {
             if (hoursPassed >= 24) {
                 hoursPassed = 0;
 
-                // Update each animal's state
+                if (calendar.get(Calendar.DAY_OF_MONTH) == 1) {
+                    payRangers();
+                }
+
+                handleRangerPoacherInteractions();
+
                 for (Animal animal : safari.getAnimalList()) {
                     // Increment age
                     animal.setAge(animal.getAge() + 1);

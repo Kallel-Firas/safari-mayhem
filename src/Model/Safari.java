@@ -180,4 +180,24 @@ public class Safari {
             }
         }
     }
+
+    public List<Ranger> getRangers() {
+        return rangers;
+    }
+
+    public List<Poacher> getPoachers() {
+        return poachers;
+    }
+
+    public List<Vegetation> getVegetationList() {
+        return vegetationList;
+    }
+
+    public List<Herd> getHerdList() {
+        return herdList;
+    }
+
+    public void removePoacher(Poacher poacher) {
+        poachers.remove(poacher);
+    }
 }

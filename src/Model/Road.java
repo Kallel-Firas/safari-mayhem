@@ -4,7 +4,15 @@ public class Road extends Land {
     private int price = 250;
     private boolean entrance = false;
     private boolean exit = false;
+    private String imageKey = "road1"; // Default to straight road
 
+    public void setImageKey(String imageKey) {
+        this.imageKey = imageKey;
+    }
+
+    public String getImageKey() {
+        return imageKey;
+    }
 
     public void setEntrance(boolean entrance) {
         this.entrance = entrance;
@@ -31,6 +39,4 @@ public class Road extends Land {
         this.entrance = entrance;
         this.exit = exit;
     }
-
-
 }
