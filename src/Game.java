@@ -1,7 +1,7 @@
 import Model.Animal;
 import Model.Difficulty;
 import Model.Safari;
-import View.WelcomeScreen;
+import View.*;
 
 import javax.swing.*;
 import java.util.Calendar;

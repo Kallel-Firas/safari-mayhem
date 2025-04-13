@@ -1,8 +1,8 @@
 package Model;
 
 public class Dirt extends Land {
-    public Dirt(int x, int y) {
-        super(x, y);
+    public Dirt() {
+        super(0, 0);
     }
 
     public int getCost() {
