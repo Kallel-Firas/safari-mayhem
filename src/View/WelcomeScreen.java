@@ -2,45 +2,103 @@ package View;
 
 import javax.swing.*;
 import java.awt.*;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
 
 public class WelcomeScreen extends JFrame {
+    private Image backgroundImage;
+
     public WelcomeScreen() {
-        // set the preferred size of the welcome screen
-        setPreferredSize(new Dimension(50 * 16, 50 * 16));
-        // set the layout of the welcome screen
-        setLayout(new GridLayout(3, 1));
-        // create a new game button
-        JButton newGameButton = new JButton("New Game");
-        // create a load game button
-        JButton loadGameButton = new JButton("Load Game");
-        // create an exit button
-        JButton exitButton = new JButton("Exit");
-        // add the buttons to the welcome screen
-        add(newGameButton);
-        add(loadGameButton);
-        add(exitButton);
-        // set the title of the welcome screen
-        setTitle("Model.Safari Mayhem");
-        // set the default close operation of the welcome screen
+        try {
+            backgroundImage = ImageIO.read(new File("resources/safariback.jpg"));
+        } catch (IOException e) {
+            System.out.println("Error loading background image: " + e.getMessage());
+        }
+
+        setTitle("Safari Mayhem");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // pack the welcome screen
-        pack();
-        // set the location of the welcome screen to the center of the screen
-        setLocationRelativeTo(null);
-        // make the welcome screen visible
-        setVisible(true);
-        // add an action listener to the exit button
+        setPreferredSize(new Dimension(800, 600));
+        setLayout(new BorderLayout());
+
+        // Create a custom panel for the background
+        JPanel backgroundPanel = new JPanel(new GridBagLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (backgroundImage != null) {
+                    g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+                }
+            }
+        };
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        buttonPanel.setOpaque(false);
+
+        JButton newGameButton = createStyledButton("New Game");
+        JButton loadGameButton = createStyledButton("Load Game");
+        JButton exitButton = createStyledButton("Exit");
+
+        Dimension buttonSize = new Dimension(200, 40);
+        newGameButton.setPreferredSize(buttonSize);
+        loadGameButton.setPreferredSize(buttonSize);
+        exitButton.setPreferredSize(buttonSize);
+
+        newGameButton.setMaximumSize(buttonSize);
+        loadGameButton.setMaximumSize(buttonSize);
+        exitButton.setMaximumSize(buttonSize);
+
+        newGameButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loadGameButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        exitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        buttonPanel.add(Box.createVerticalGlue());
+        buttonPanel.add(newGameButton);
+        buttonPanel.add(Box.createVerticalStrut(15));
+        buttonPanel.add(loadGameButton);
+        buttonPanel.add(Box.createVerticalStrut(15));
+        buttonPanel.add(exitButton);
+        buttonPanel.add(Box.createVerticalGlue());
+
         exitButton.addActionListener(e -> System.exit(0));
-        // add an action listener to the new game button
         newGameButton.addActionListener(e -> {
-            // create a new game screen
             NewGameScreen newGameScreen = new NewGameScreen();
-            // set the location of the new game screen to the center of the screen
             newGameScreen.setLocationRelativeTo(null);
-            // make the new game screen visible
             newGameScreen.setVisible(true);
-            // dispose the welcome screen
             this.dispose();
         });
+
+        backgroundPanel.add(buttonPanel);
+
+        add(backgroundPanel, BorderLayout.CENTER);
+
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    private JButton createStyledButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 16));
+        button.setForeground(Color.WHITE);
+        button.setBackground(new Color(51, 51, 51));
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(76, 76, 76), 2),
+                BorderFactory.createEmptyBorder(8, 20, 8, 20)
+        ));
+
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(new Color(76, 76, 76));
+            }
+
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(new Color(51, 51, 51));
+            }
+        });
+
+        return button;
     }
 }
