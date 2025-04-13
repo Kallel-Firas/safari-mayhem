@@ -200,4 +200,33 @@ public class Safari {
     public void removePoacher(Poacher poacher) {
         poachers.remove(poacher);
     }
+
+    public void setLandscape(int x, int y, Landscape landscape) {
+        landscapes.get(x).set(y, landscape);
+    }
+
+    private int nextAnimalId = 1;
+    public int getNextAnimalId() {
+        return nextAnimalId++;
+    }
+
+    public void addAnimal(Animal animal) {
+        // Find the appropriate herd for this animal type
+        for (Herd herd : herdList) {
+            if (herd.getAnimalList().isEmpty() ||
+                    herd.getAnimalList().get(0).getClass() == animal.getClass()) {
+                herd.getAnimalList().add(animal);
+                return;
+            }
+        }
+        // If no matching herd found, create a new one
+        Herd newHerd = new Herd<>(landscapes, this);
+        newHerd.getAnimalList().add(animal);
+        herdList.add(newHerd);
+    }
+
+    public void addVegetation(Vegetation vegetation) {
+        vegetationList.add(vegetation);
+    }
+
 }

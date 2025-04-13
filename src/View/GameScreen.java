@@ -99,7 +99,7 @@ public class GameScreen extends JFrame {
         renderTimer = new Timer(1000 / 60, e -> repaint());
         renderTimer.start();
 
-        add(layeredPane, BorderLayout.CENTER);
+//        add(layeredPane, BorderLayout.CENTER);
         pack();
     }
 
@@ -295,10 +295,10 @@ public class GameScreen extends JFrame {
                             safari.addVegetation(new Bush(x, y));
                             break;
                         case "Water":
-                            safari.setLandscape(x, y, new Water(x, y, 1));
+                            safari.setLandscape(x, y, new Water());
                             break;
                         case "Dirt":
-                            safari.setLandscape(x, y, new Dirt(x, y));
+                            safari.setLandscape(x, y, new Dirt());
                             break;
                     }
                     System.out.println("Plant/landscape placed successfully");
