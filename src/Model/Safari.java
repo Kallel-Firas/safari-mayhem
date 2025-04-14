@@ -1,20 +1,28 @@
 package Model;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Safari {
-    List<Herd> herdList;
+    private List<Herd> herdList = new ArrayList<>();
     //private int difficultyLevel;   //all of these attributes are in the game section
     //private int speedMode;
     //private String startingDate;
-    private List<Jeep> jeeps;
-    private List<Poacher> poachers;
-    private List<Ranger> rangers;
+    private List<Jeep> jeeps = new ArrayList<>();
+    private List<Poacher> poachers = new ArrayList<>();
+    private List<Ranger> rangers = new ArrayList<>();
     private List<int[]> blockList = new ArrayList<>();
     private List<Vegetation> vegetationList = new ArrayList<>();
-    private List<List<Landscape>> landscapes;
-
+    private List<List<Landscape>> landscapes = new ArrayList<>();
+    private int nextAnimalId = 1;
+    private List<Animal> animals = new ArrayList<>();
+    private List<Entity> entities = new ArrayList<>();
+    private boolean lastRoadNetworkComplete = false;
 
     public List<List<Landscape>> getLandscapes() {// added this getter
         return landscapes;
@@ -24,12 +32,9 @@ public class Safari {
         //this.difficultyLevel = difficultyLevel;
         //this.speedMode = speedMode;
         //this.startingDate = startingDate;
-        this.jeeps = new ArrayList<>();
-        this.herdList = new ArrayList<>();
-        this.poachers = new ArrayList<>();
-        this.rangers = new ArrayList<>();
+        // Fields are already initialized with the declarations
         // populate landscape
-        this.landscapes = new ArrayList<>();
+        this.landscapes.clear();
         for (int i = 0; i < 50; i++) {
             List<Landscape> column = new ArrayList<>();
             for (int j = 0; j < 50; j++) {
@@ -160,6 +165,9 @@ public class Safari {
         for (Herd herd : deadHerds) {
             herdList.remove(herd);
         }
+        
+        // Update jeeps to make them move
+        updateJeeps();
     }
 
     public void removeEntityAt(int x, int y, Class <? extends Entity> entityClass) {
@@ -207,7 +215,6 @@ public class Safari {
         landscapes.get(x).set(y, landscape);
     }
 
-    private int nextAnimalId = 1;
     public int getNextAnimalId() {
         return nextAnimalId++;
     }
@@ -229,6 +236,108 @@ public class Safari {
 
     public void addVegetation(Vegetation vegetation) {
         vegetationList.add(vegetation);
+    }
+
+    public boolean isRoadNetworkComplete() {
+        List<Road> startEndPoints = new ArrayList<>();
+
+        // Find all roads located on a white box (valid start/end points)
+        for (List<Landscape> row : landscapes) {
+            for (Landscape tile : row) {
+                if (tile instanceof Road) {
+                    Road road = (Road) tile;
+                    // Check if this road tile is marked as an entrance/exit
+                    // (which should correspond to being on a white box based on placement logic)
+                    if (road.isEntrance() || road.isExit()) { 
+                        startEndPoints.add(road);
+                    }
+                }
+            }
+        }
+
+        // Need at least two distinct start/end points for a complete network
+        if (startEndPoints.size() < 2) {
+            return false;
+        }
+        
+        // Check for duplicates - we need at least two *unique* locations
+        Set<Point> uniqueLocations = new HashSet<>();
+        for(Road r : startEndPoints) {
+            uniqueLocations.add(new Point(r.getCurrentX(), r.getCurrentY()));
+        }
+        if (uniqueLocations.size() < 2) {
+            return false; // Only one unique white box location is part of the road network
+        }
+
+        // Check if ANY pair of distinct start/end points are connected
+        for (int i = 0; i < startEndPoints.size(); i++) {
+            for (int j = i + 1; j < startEndPoints.size(); j++) {
+                Road start = startEndPoints.get(i);
+                Road end = startEndPoints.get(j);
+                
+                // Ensure we are checking two different locations
+                if (start.getCurrentX() != end.getCurrentX() || start.getCurrentY() != end.getCurrentY()) {
+                    if (areRoadsConnected(start, end)) {
+                        return true; // Found a valid connected path between two distinct points
+                    }
+                }
+            }
+        }
+
+        // No connected path found between any pair of distinct start/end points
+        return false;
+    }
+
+    private boolean areRoadsConnected(Road start, Road end) {
+        int n = landscapes.size();
+        int m = landscapes.get(0).size();
+        boolean[][] visited = new boolean[n][m];
+        
+        Queue<int[]> queue = new LinkedList<>();
+        queue.add(new int[]{start.getCurrentX(), start.getCurrentY()});
+        visited[start.getCurrentX()][start.getCurrentY()] = true;
+        
+        while (!queue.isEmpty()) {
+            int[] current = queue.poll();
+            int x = current[0], y = current[1];
+            
+            if (x == end.getCurrentX() && y == end.getCurrentY()) {
+                return true;
+            }
+            
+            int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+            for (int[] dir : directions) {
+                int newX = x + dir[0];
+                int newY = y + dir[1];
+                
+                if (newX >= 0 && newX < n && newY >= 0 && newY < m && 
+                    !visited[newX][newY] && landscapes.get(newX).get(newY) instanceof Road) {
+                    queue.add(new int[]{newX, newY});
+                    visited[newX][newY] = true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    public List<Jeep> getJeeps() {
+        return jeeps;
+    }
+    
+    // Update all jeeps
+    public void updateJeeps() {
+        for (Jeep jeep : jeeps) {
+            jeep.update(this);
+        }
+    }
+
+    public boolean wasLastRoadNetworkComplete() {
+        return lastRoadNetworkComplete;
+    }
+
+    public void setLastRoadNetworkComplete(boolean complete) {
+        this.lastRoadNetworkComplete = complete;
     }
 
 }

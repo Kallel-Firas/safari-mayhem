@@ -33,6 +33,14 @@ public class Road extends Land {
     public boolean isExit() {
         return exit;
     }
+    
+    public int getCurrentX() {
+        return getX();
+    }
+    
+    public int getCurrentY() {
+        return getY();
+    }
 
     public Road(int x, int y, boolean entrance, boolean exit) {
         super(x,y);

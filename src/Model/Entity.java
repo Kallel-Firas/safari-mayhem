@@ -30,7 +30,7 @@ public abstract class Entity {
         this.visualY = y*32;
     }
 
-//    public void animateMovement(int targetX, int targetY) {
+    //    public void animateMovement(int targetX, int targetY) {
 //        // Implement animation logic here
 //        // you can use a timer to update the position gradually
 //        Timer timer = new Timer(1000/60, e -> {

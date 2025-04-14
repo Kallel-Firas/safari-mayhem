@@ -49,11 +49,69 @@ public class GameScreen extends JFrame {
         gameMap.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                // Calculate tile coordinates considering viewport offset
+                int tileX = (e.getX() / 32) + gameMap.getViewportX();
+                int tileY = (e.getY() / 32) + gameMap.getViewportY();
+
                 if (selectedItem != null) {
-                    // Calculate tile coordinates considering viewport offset
-                    int tileX = (e.getX() / 32) + gameMap.getViewportX();
-                    int tileY = (e.getY() / 32) + gameMap.getViewportY();
                     placeItem(tileX, tileY);
+                } else {
+                    // If no item is selected, check if we clicked on a road
+                    Landscape clickedTile = safari.getLandscapes().get(tileX).get(tileY);
+                    if (clickedTile instanceof Road) {
+                        Road road = (Road) clickedTile;
+                        String imageKey = road.getImageKey();
+                        String roadType = "";
+                        switch (imageKey) {
+                            case "road1": roadType = "Straight Road"; break;
+                            case "road2": roadType = "Corner Road"; break;
+                            case "road3": roadType = "T-Junction Road"; break;
+                            case "road4": roadType = "Crossroad"; break;
+                            case "road5": roadType = "End Road"; break;
+                            case "road6": roadType = "Side Road"; break;
+                            default: roadType = "Straight Road";
+                        }
+
+                        if (e.getButton() == MouseEvent.BUTTON1) {  // Left click - sell the road
+                            // Remove the road
+                            safari.setLandscape(tileX, tileY, new Dirt());
+                            // Refund the road cost
+                            balance += 250; // Road cost is 250
+                            balanceLabel.setText("Balance: $" + balance);
+                            // Reset the road network completion status since we removed a road
+                            safari.setLastRoadNetworkComplete(false);
+                        } else if (e.getButton() == MouseEvent.BUTTON3) {  // Right click - copy the road
+                            if (balance >= 250) {  // Check if player can afford the road
+                                // Deduct the cost
+                                balance -= 250;
+                                balanceLabel.setText("Balance: $" + balance);
+                                // Set the road type as selected item
+                                selectedItem = roadType;
+                                selectedItemType = "road";
+                                
+                                // Set custom cursor with the road image
+                                try {
+                                    String imagePath = "resources/" + imageKey + (imageKey.equals("road1") || imageKey.equals("road4") ? ".jpg" : "withoutback.png");
+                                    BufferedImage cursorImg = ImageIO.read(new File(imagePath));
+                                    cursorImg = resize(cursorImg, 32, 32);
+                                    Cursor customCursor = Toolkit.getDefaultToolkit().createCustomCursor(
+                                            cursorImg, new Point(16, 16), "custom cursor");
+                                    setCursor(customCursor);
+                                } catch (IOException ex) {
+                                    setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+                                }
+                            } else {
+                                JOptionPane.showMessageDialog(GameScreen.this,
+                                    "Not enough money to copy this road!",
+                                    "Insufficient Funds",
+                                    JOptionPane.ERROR_MESSAGE);
+                            }
+                        }
+                        
+                        // Update the display
+                        gameMap.repaint();
+                        miniMap.repaint();
+                    }
                 }
             }
         });
@@ -144,22 +202,51 @@ public class GameScreen extends JFrame {
         // Check if the position is dirt (for road placement)
         boolean isDirt = safari.getLandscapes().get(x).get(y) instanceof Dirt;
 
+        // Handle jeep placement
+        if (selectedItemType.equals("jeep")) {
+            if (isWater) {
+                refundPurchase();
+                showPlacementError("Cannot place jeep on water!");
+                return;
+            }
+
+            // Check if there are any roads on the map
+            boolean hasRoads = safari.getLandscapes().stream()
+                    .flatMap(row -> row.stream())
+                    .anyMatch(tile -> tile instanceof Road);
+
+            if (!hasRoads) {
+                refundPurchase();
+                showPlacementError("Cannot place jeep! There are no roads on the map.");
+                return;
+            }
+
+            // Create and add the jeep
+            Jeep jeep = new Jeep(4, 500); // 4 capacity, 500 rental price
+            jeep.setCurrentX(x);
+            jeep.setCurrentY(y);
+            safari.addJeep(jeep);
+            System.out.println("Jeep placed successfully");
+
+            selectedItem = null;
+            selectedItemType = null;
+            setCursor(Cursor.getDefaultCursor());
+            gameMap.repaint();
+            miniMap.repaint();
+            return;
+        }
+
         // Handle road placement
         if (selectedItemType.equals("road")) {
-            // Check if this is the first road placement
+            // Check if this is the first road placement or if we're starting from a white box
             boolean isFirstRoad = safari.getLandscapes().stream()
                 .flatMap(row -> row.stream())
                 .noneMatch(tile -> tile instanceof Road);
 
-            if (isFirstRoad) {
-                // For first road, must start from a white box
-                if (!gameMap.isValidRoadStartPoint(x, y)) {
-                    refundPurchase();
-                    showPlacementError("Roads must start from one of the white boxes on the edges!");
-                    return;
-                }
-            } else {
-                // For subsequent roads, must be adjacent to an existing road
+            boolean isStartingFromWhiteBox = gameMap.isValidRoadStartPoint(x, y);
+
+            if (!isFirstRoad && !isStartingFromWhiteBox) {
+                // For roads not starting from a white box, must be adjacent to an existing road
                 boolean isAdjacentToRoad = false;
                 for (int dx = -1; dx <= 1; dx++) {
                     for (int dy = -1; dy <= 1; dy++) {
@@ -179,7 +266,7 @@ public class GameScreen extends JFrame {
 
                 if (!isAdjacentToRoad) {
                     refundPurchase();
-                    showPlacementError("Roads must be connected to existing roads!");
+                    showPlacementError("Roads must be connected to existing roads or start from a white box!");
                     return;
                 }
             }
@@ -214,14 +301,25 @@ public class GameScreen extends JFrame {
                 default: imageKey = "road1";
             }
 
-            // Check if this is an entrance or exit based on position
-            boolean isEntrance = x == 0 || y == 0; // Left or top edge
-            boolean isExit = x == safari.getLandscapes().size() - 1 || y == safari.getLandscapes().get(0).size() - 1; // Right or bottom edge
+            // Check if this is an entrance or exit based on the valid start points
+            boolean isEntrance = gameMap.isValidRoadStartPoint(x, y);
+            boolean isExit = gameMap.isValidRoadStartPoint(x, y);
+            // Note: A point can be both an entrance and an exit if it's the same point.
+            // The connectivity check handles finding *a* path, so this is okay.
 
             Road road = new Road(x, y, isEntrance, isExit);
             road.setImageKey(imageKey);
             safari.setLandscape(x, y, road);
-            System.out.println("Road placed successfully");
+            System.out.println("Road placed successfully at (" + x + ", " + y + ") Entrance: " + isEntrance + ", Exit: " + isExit);
+
+            // Check if this specific road network is complete
+            boolean wasComplete = safari.isRoadNetworkComplete();
+            if (wasComplete && !safari.wasLastRoadNetworkComplete()) {
+                JOptionPane.showMessageDialog(this, "Road network complete! You can now purchase jeeps.", "Road Complete", JOptionPane.INFORMATION_MESSAGE);
+                safari.setLastRoadNetworkComplete(true);
+            } else if (!wasComplete) {
+                safari.setLastRoadNetworkComplete(false);
+            }
 
             selectedItem = null;
             selectedItemType = null;
@@ -412,6 +510,9 @@ public class GameScreen extends JFrame {
         addShopItem(panel, "resources/road4.jpg", "Crossroad", 250, "road");
         addShopItem(panel, "resources/road5withoutback.png", "End Road", 250, "road");
         addShopItem(panel, "resources/road6withoutback.png", "Side Road", 250, "road");
+        
+        // Add jeep to the roads tab
+        addShopItem(panel, "resources/jeepstraight.png", "Jeep", 2000, "jeep");
 
         return new JScrollPane(panel);
     }
@@ -440,6 +541,17 @@ public class GameScreen extends JFrame {
 
             // Add buy button action
             buyButton.addActionListener(e -> {
+                // Check for roads if buying a jeep
+                if (type.equals("jeep")) {
+                    if (!safari.isRoadNetworkComplete()) {
+                        JOptionPane.showMessageDialog(shopDialog,
+                                "Cannot buy jeep! The road network must be complete (connected entrance to exit) before purchasing a jeep.",
+                                "Incomplete Road Network",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                }
+
                 if (balance >= price) {
                     balance -= price;
                     balanceLabel.setText("Balance: $" + balance);
@@ -478,9 +590,7 @@ public class GameScreen extends JFrame {
 
             panel.add(itemPanel);
         } catch (IOException e) {
-            System.out.println("Error loading image: " + imagePath);
-            JLabel errorLabel = new JLabel("Image not found: " + name);
-            panel.add(errorLabel);
+            System.out.println("Error loading image: " + e.getMessage());
         }
     }
 
@@ -590,6 +700,11 @@ public class GameScreen extends JFrame {
                 gameMap.repaint();
                 miniMap.repaint();
             }
+        }
+        
+        // Update jeeps
+        for (Jeep jeep : safari.getJeeps()) {
+            jeep.update(safari);
         }
 
         timeLabel.setText(String.format("Day %d, %02d:00", day, hour));
