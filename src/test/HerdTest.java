@@ -1,0 +1,80 @@
+package test;
+
+import Model.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
+
+class HerdTest {
+    private Herd<Sheep> herd;
+    private List<List<Landscape>> landscapes;
+    private Safari safari;
+
+    @BeforeEach
+    void setUp() {
+        safari = new Safari(3, 1, "2023-01-01");
+        landscapes = safari.getLandscapes();
+        herd = new Herd<>(landscapes, safari);
+        herd.generatePopulation("Sheep");
+    }
+
+    @Test
+    void testGeneratePopulationCreatesAnimals() {
+        assertFalse(herd.getAnimalList().isEmpty());
+        assertEquals(9, herd.getAnimalList().size()); // 3x3 grid
+    }
+
+    @Test
+    void testUpdateThirstAndHunger() {
+        int initialThirst = herd.getThirstMeter();
+        int initialHunger = herd.getHungerMeter();
+        herd.update();
+        assertTrue(herd.getThirstMeter() < initialThirst);
+        assertTrue(herd.getHungerMeter() < initialHunger);
+    }
+
+    @Test
+    void testCanDrinkWhenNearWater() {
+        // Add water near the herd
+        int x = herd.getAnimalList().get(0).getCurrentX() + 1;
+        int y = herd.getAnimalList().get(0).getCurrentY();
+        landscapes.get(x).set(y, new Water());
+
+        assertTrue(herd.CanDrink());
+    }
+
+    @Test
+    void testAnimalDiesWhenThirstMeterZero() {
+        int initialSize = herd.getAnimalList().size();
+        // Force thirst meter to 0
+        // update number if you modified initial thirst and thirst rate
+        for (int i = 0; i < 51; i++) {
+            herd.update();
+        }
+        assertEquals(initialSize - 1, herd.getAnimalList().size());
+    }
+
+    @Test
+    void testSearchForWater() {
+        // This test may fail on some very special edge cases. Rerun the test if it fails.
+        safari = new Safari(1, 1, "2023-01-01");
+        landscapes = safari.getLandscapes();
+        herd = new Herd<>(landscapes, safari);
+        herd.generatePopulation("Sheep");
+
+        int distanceBefore = 0;
+        for (Animal animal : herd.getAnimalList()) {
+            distanceBefore += Math.abs(animal.getCurrentX() - 10) + Math.abs(animal.getCurrentY() - 10);
+        }
+        landscapes.get(10).set(10, new Water());
+        herd.update();
+        int distanceAfter = 0;
+        for (Animal animal : herd.getAnimalList()) {
+            distanceAfter += Math.abs(animal.getCurrentX() - 10) + Math.abs(animal.getCurrentY() - 10);
+        }
+        // Herd should start moving toward water
+        assertTrue(distanceAfter <= distanceBefore);
+    }
+}

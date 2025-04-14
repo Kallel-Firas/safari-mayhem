@@ -269,7 +269,7 @@ public void Move(int x, int y, List<List<Landscape>> map, List<Entity> entities)
     }
 
     public void Drink() {
-        this.thirst_meter = 0;
+        thirst_meter = 0;
     }
 
 

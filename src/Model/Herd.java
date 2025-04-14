@@ -18,7 +18,7 @@ public class Herd<T extends Animal> {
     private int hungerMeter;
     private final int thirstRate = 2;
     private final int hungerRate = 1; // Changed from 0 to 1 to enable hunger mechanics
-    private List<Entity> entities;
+    private List<Entity> entities = new ArrayList<>();
     private boolean isMoving = false;
     private int[] moveToLocation = null;
     private int restingTime = 0; // Counter for how long the herd has been resting
@@ -92,6 +92,13 @@ public class Herd<T extends Animal> {
                 addAnimal((T) cheetah);
             }
         }
+    }
+
+    public int getThirstMeter(){
+        return thirstMeter;
+    }
+    public int getHungerMeter(){
+        return hungerMeter;
     }
 
     private void generateLions() {
@@ -371,7 +378,7 @@ public class Herd<T extends Animal> {
         }
     }
 
-    private boolean CanDrink() {
+    public boolean CanDrink() {
         for (T animal : animalList) {
             int x = animal.getCurrentX();
             int y = animal.getCurrentY();

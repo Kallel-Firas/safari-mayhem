@@ -38,14 +38,16 @@ public class Safari {
             landscapes.add(column);
         }
         // Add some water to the landscape
-        for (int i = 0; i < 10; i++) {
-            int x = (int) (Math.random() * 50);
-            int y = (int) (Math.random() * 50);
-            // Add a pond, not just one tile.
-            for (int j = -1; j <= 1; j++) {
-                for (int k = -1; k <= 1; k++) {
-                    if (x + j >= 0 && x + j < 50 && y + k >= 0 && y + k < 50) {
-                        landscapes.get(x + j).set(y + k, new Water());
+        if (difficultyLevel != 3) {
+            for (int i = 0; i < 10; i++) {
+                int x = (int) (Math.random() * 50);
+                int y = (int) (Math.random() * 50);
+                // Add a pond, not just one tile.
+                for (int j = -1; j <= 1; j++) {
+                    for (int k = -1; k <= 1; k++) {
+                        if (x + j >= 0 && x + j < 50 && y + k >= 0 && y + k < 50) {
+                            landscapes.get(x + j).set(y + k, new Water());
+                        }
                     }
                 }
             }

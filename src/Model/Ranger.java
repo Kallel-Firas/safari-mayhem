@@ -205,4 +205,8 @@ public class Ranger extends Entity {
     public void paySalary() {
         System.out.println("Paying salary to ranger: " + salary);
     }
+
+    public boolean hasTarget() {
+        return currentTarget != null;
+    }
 }
