@@ -22,6 +22,7 @@ public class Safari {
     private int nextAnimalId = 1;
     private List<Animal> animals = new ArrayList<>();
     private List<Entity> entities = new ArrayList<>();
+    private boolean lastRoadNetworkComplete = false;
 
     public List<List<Landscape>> getLandscapes() {// added this getter
         return landscapes;
@@ -327,6 +328,14 @@ public class Safari {
         for (Jeep jeep : jeeps) {
             jeep.update(this);
         }
+    }
+
+    public boolean wasLastRoadNetworkComplete() {
+        return lastRoadNetworkComplete;
+    }
+
+    public void setLastRoadNetworkComplete(boolean complete) {
+        this.lastRoadNetworkComplete = complete;
     }
 
 }
