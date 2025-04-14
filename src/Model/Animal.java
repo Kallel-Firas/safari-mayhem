@@ -19,6 +19,17 @@ public abstract class Animal extends Entity {
     private List<int[]> food_locations;
     private boolean alive = true;
     private int currentX, currentY;
+    // Add this field to Animal class
+    private boolean hasLocationChip = false;
+
+    // Add these methods
+    public boolean hasLocationChip() {
+        return hasLocationChip;
+    }
+
+    public void setHasLocationChip(boolean hasLocationChip) {
+        this.hasLocationChip = hasLocationChip;
+    }
 
     public int getCurrentX() {
         return currentX;

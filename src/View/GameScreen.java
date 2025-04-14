@@ -5,15 +5,14 @@ import Model.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.List;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import javax.swing.Timer;
 import java.awt.event.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.Iterator;
+import java.util.*;
 
 public class GameScreen extends JFrame {
     GameMap gameMap;
@@ -320,6 +319,71 @@ public class GameScreen extends JFrame {
         }
     }
 
+    private void handleChipPurchase() {
+        // Check if there are animals to chip
+        java.util.List<Animal> animals = safari.getAnimalList();
+        if (animals == null || animals.isEmpty()) {
+            JOptionPane.showMessageDialog(shopDialog,
+                    "You don't have any animals to track.",
+                    "No Animals",
+                    JOptionPane.INFORMATION_MESSAGE);
+            refundPurchase();
+            return;
+        }
+
+        // Build list of animal options
+        java.util.List<String> animalOptionsList = new java.util.ArrayList<>();
+        java.util.List<Animal> availableAnimals = new java.util.ArrayList<>();
+
+        for (Animal animal : animals) {
+            if (!animal.hasLocationChip()) {
+                String description = animal.getClass().getSimpleName() +
+                        " at (" + animal.getCurrentX() + "," + animal.getCurrentY() + ")";
+                animalOptionsList.add(description);
+                availableAnimals.add(animal);
+            }
+        }
+
+        // If no animals without chips, show message
+        if (availableAnimals.isEmpty()) {
+            JOptionPane.showMessageDialog(shopDialog,
+                    "All your animals already have location chips installed.",
+                    "No Animals Available",
+                    JOptionPane.INFORMATION_MESSAGE);
+            refundPurchase();
+            return;
+        }
+
+        // Convert to array for JOptionPane
+        String[] animalOptions = animalOptionsList.toArray(new String[0]);
+
+        // Show dialog for selection
+        String selectedAnimal = (String) JOptionPane.showInputDialog(
+                shopDialog,
+                "Select an animal to install location chip:",
+                "Location Chip Installation",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                animalOptions,
+                animalOptions[0]);
+
+        // Process selection
+        if (selectedAnimal != null) {
+            int index = animalOptionsList.indexOf(selectedAnimal);
+            if (index >= 0 && index < availableAnimals.size()) {
+                Animal animal = availableAnimals.get(index);
+                animal.setHasLocationChip(true);
+                JOptionPane.showMessageDialog(shopDialog,
+                        "Location chip installed successfully!",
+                        "Installation Complete",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        } else {
+            // User canceled
+            refundPurchase();
+        }
+    }
+
     private void refundPurchase() {
         int refundAmount = 0;
         switch (selectedItem) {
@@ -383,7 +447,7 @@ public class GameScreen extends JFrame {
         addShopItem(panel, "resources/elephant.png", "Elephant", 800, "animal");
         addShopItem(panel, "resources/sheep.png", "Sheep", 200, "animal");
         addShopItem(panel, "resources/ranger.png", "Ranger", 500, "ranger");
-
+        addShopItem(panel, "resources/chip.png", "Location Chip", 100, "chip");
         return new JScrollPane(panel);
     }
 
@@ -415,7 +479,81 @@ public class GameScreen extends JFrame {
 
         return new JScrollPane(panel);
     }
+    private void addShopItem(JPanel panel, String imagePath, String name, int price, String type) {
+        JPanel itemPanel = new JPanel();
+        itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.Y_AXIS));
+        itemPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
+        try {
+            // Load and scale image
+            BufferedImage img = ImageIO.read(new File(imagePath));
+            Image scaledImg = img.getScaledInstance(64, 64, Image.SCALE_SMOOTH);
+            JLabel imageLabel = new JLabel(new ImageIcon(scaledImg));
+            imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            // Create name and price labels
+            JLabel nameLabel = new JLabel(name);
+            nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            JLabel priceLabel = new JLabel("$" + price);
+            priceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            // Create buy button
+            JButton buyButton = new JButton("Buy");
+            buyButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            // Add buy button action
+            buyButton.addActionListener(e -> {
+                if (balance >= price) {
+                    balance -= price;
+                    balanceLabel.setText("Balance: $" + balance);
+
+                    // Special handling for location chips
+                    if (type.equals("chip")) {
+                        handleChipPurchase();
+                    } else {
+                        // Normal item purchase flow
+                        selectedItem = name;
+                        selectedItemType = type;
+                        shopDialog.setVisible(false);
+
+                        // Change cursor to indicate placement mode
+                        try {
+                            BufferedImage cursorImg = ImageIO.read(new File(imagePath));
+                            cursorImg = resize(cursorImg, 32, 32);
+                            Cursor customCursor = Toolkit.getDefaultToolkit().createCustomCursor(
+                                    cursorImg, new Point(16, 16), "custom cursor");
+                            setCursor(customCursor);
+                        } catch (IOException ex) {
+                            setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(shopDialog,
+                            "Not enough money to buy " + name,
+                            "Insufficient Funds",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            });
+
+            // Add components to item panel
+            itemPanel.add(Box.createVerticalStrut(10));
+            itemPanel.add(imageLabel);
+            itemPanel.add(Box.createVerticalStrut(5));
+            itemPanel.add(nameLabel);
+            itemPanel.add(Box.createVerticalStrut(5));
+            itemPanel.add(priceLabel);
+            itemPanel.add(Box.createVerticalStrut(5));
+            itemPanel.add(buyButton);
+            itemPanel.add(Box.createVerticalStrut(10));
+
+            panel.add(itemPanel);
+        } catch (IOException e) {
+            System.out.println("Error loading image: " + imagePath);
+            JLabel errorLabel = new JLabel("Image not found: " + name);
+            panel.add(errorLabel);
+        }
+    }
+/*
     private void addShopItem(JPanel panel, String imagePath, String name, int price, String type) {
         JPanel itemPanel = new JPanel();
         itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.Y_AXIS));
@@ -484,6 +622,8 @@ public class GameScreen extends JFrame {
         }
     }
 
+
+ */
     private BufferedImage resize(BufferedImage img, int newWidth, int newHeight) {
         BufferedImage resized = new BufferedImage(newWidth, newHeight, img.getType());
         Graphics2D g2d = resized.createGraphics();
@@ -620,6 +760,9 @@ public class GameScreen extends JFrame {
         }
     }
 
+    public JLabel getTimeLabel() {
+        return timeLabel;
+    }
     public Safari getSafari() {
         return safari;
     }
