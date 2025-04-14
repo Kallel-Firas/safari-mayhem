@@ -42,7 +42,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
     private int viewportY = 0;
     private final int viewportWidth = 25; // Display 25 tiles horizontally
     private final int viewportHeight = 25;
-
+    private boolean isNightTime = false;
     private MiniMap miniMap;
 
     private Safari safari;
@@ -121,17 +121,8 @@ public class GameMap extends JPanel implements MouseWheelListener {
     public void update(List<List<Landscape>> terrain, List<Entity> entities) {
         this.terrain = terrain;
         this.entities = entities;
-    }
 
-    @Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if (terrain == null) {
-            return;
-        }
-
-        // Get current time from the timeLabel in GameScreen
-        boolean isNightTime = false;
+        // Get night time status from the game screen
         if (getParent() instanceof JLayeredPane && getParent().getParent() instanceof GameScreen) {
             GameScreen gameScreen = (GameScreen) getParent().getParent();
             String timeText = gameScreen.getTimeLabel().getText();
@@ -141,55 +132,41 @@ public class GameMap extends JPanel implements MouseWheelListener {
                     String[] timeParts = parts[1].split(":");
                     if (timeParts.length > 0) {
                         int hour = Integer.parseInt(timeParts[0]);
-                        // Night time between 18:00 and 6:00
                         isNightTime = (hour >= 18 || hour < 6);
                     }
                 }
             }
+        }
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (terrain == null) {
+            return;
         }
 
         // Draw terrain
         for (int x = viewportX; x < viewportX + viewportWidth && x < terrain.size(); x++) {
             for (int y = viewportY; y < viewportY + viewportHeight && y < terrain.get(x).size(); y++) {
                 Landscape currentTile = terrain.get(x).get(y);
-                BufferedImage image;
-
-                // First draw the dirt texture if it's a road
-                if (currentTile instanceof Road) {
-                    image = terrainImages.get(Dirt.class);
-                    if (image != null) {
-                        g.drawImage(image, (x - viewportX) * textureResolution,
-                                (y - viewportY) * textureResolution,
-                                textureResolution, textureResolution, null);
-                    }
-
-                    // Then draw the road image on top
-                    Road road = (Road) currentTile;
-                    image = roadImages.get(road.getImageKey());
-                    if (image == null) {
-                        image = roadImages.get("road1");
-                    }
-                } else {
-                    image = terrainImages.get(currentTile.getClass());
-                }
-
+                BufferedImage image = terrainImages.get(currentTile.getClass());
                 if (image != null) {
                     g.drawImage(image, (x - viewportX) * textureResolution,
                             (y - viewportY) * textureResolution,
                             textureResolution, textureResolution, null);
                 }
+            }
+        }
 
-                // Draw white boxes at road start points
-                if (roadStartPoints.contains(new Point(x, y))) {
-                    g.setColor(new Color(255, 255, 255, 128)); // Semi-transparent white
-                    g.fillRect((x - viewportX) * textureResolution,
-                            (y - viewportY) * textureResolution,
-                            textureResolution, textureResolution);
-                    g.setColor(Color.BLACK);
-                    g.drawRect((x - viewportX) * textureResolution,
-                            (y - viewportY) * textureResolution,
-                            textureResolution, textureResolution);
-                }
+        // Draw road start points
+        //g.setColor(Color.WHITE);
+        for (Point point : roadStartPoints) {
+            int screenX = (point.x - viewportX) * textureResolution;
+            int screenY = (point.y - viewportY) * textureResolution;
+
+            if (screenX >= 0 && screenX < getWidth() && screenY >= 0 && screenY < getHeight()) {
+                g.fillRect(screenX, screenY, textureResolution, textureResolution);
             }
         }
 
@@ -201,18 +178,15 @@ public class GameMap extends JPanel implements MouseWheelListener {
             if (vegX >= viewportX && vegX < viewportX + viewportWidth &&
                     vegY >= viewportY && vegY < viewportY + viewportHeight) {
                 g.drawImage(image, (vegX - viewportX) * textureResolution,
-                        (vegY - viewportY) * textureResolution, null);
+                        (vegY - viewportY) * textureResolution, textureResolution, textureResolution, null);
             }
         }
 
-        // Draw entities (animals, poachers, rangers)
+        // Draw entities
         for (Entity entity : entities) {
-            // Skip animals at night unless they meet visibility criteria
-            if (isNightTime && entity instanceof Animal) {
-                Animal animal = (Animal) entity;
-                if (!isAnimalVisibleAtNight(animal)) {
-                    continue;
-                }
+            // Skip animals at night unless they should be visible
+            if (isNightTime && entity instanceof Animal && !isAnimalVisibleAtNight((Animal)entity)) {
+                continue;
             }
 
             BufferedImage image = entityImages.get(entity.getClass());
@@ -221,89 +195,114 @@ public class GameMap extends JPanel implements MouseWheelListener {
             if (entityX >= viewportX && entityX < viewportX + viewportWidth &&
                     entityY >= viewportY && entityY < viewportY + viewportHeight) {
                 g.drawImage(image, (entityX - viewportX) * textureResolution,
-                        (entityY - viewportY) * textureResolution, null);
+                        (entityY - viewportY) * textureResolution, textureResolution, textureResolution, null);
             }
         }
 
-        // Apply night effect if it's night time
+        // Apply night effect
         if (isNightTime) {
-            Graphics2D g2d = (Graphics2D) g.create();
-
-            // Create a semi-transparent dark overlay for the entire map
-            g2d.setColor(new Color(0, 0, 30, 180));
-            g2d.fillRect(0, 0, getWidth(), getHeight());
-
-            // Set composite to clear areas that should be visible
-            g2d.setComposite(AlphaComposite.Clear);
-
-            // Make areas around visible entities visible (create light circles)
-            for (Entity entity : entities) {
-                if (entity instanceof Ranger ||
-                        (entity instanceof Animal && ((Animal)entity).hasLocationChip())) {
-
-                    int entityX = entity.getCurrentX();
-                    int entityY = entity.getCurrentY();
-
-                    if (entityX >= viewportX && entityX < viewportX + viewportWidth &&
-                            entityY >= viewportY && entityY < viewportY + viewportHeight) {
-
-                        int screenX = (entityX - viewportX) * textureResolution + textureResolution/2;
-                        int screenY = (entityY - viewportY) * textureResolution + textureResolution/2;
-                        int radius = textureResolution * 3; // Visibility radius
-
-                        g2d.fillOval(screenX - radius, screenY - radius, radius * 2, radius * 2);
-                    }
-                }
-            }
-
-            // Make roads and water visible at night
-            for (int x = viewportX; x < viewportX + viewportWidth && x < terrain.size(); x++) {
-                for (int y = viewportY; y < viewportY + viewportHeight && y < terrain.get(x).size(); y++) {
-                    Landscape tile = terrain.get(x).get(y);
-
-                    // Roads and water are visible at night
-                    if (tile instanceof Road || tile instanceof Water) {
-                        int screenX = (x - viewportX) * textureResolution;
-                        int screenY = (y - viewportY) * textureResolution;
-                        g2d.fillRect(screenX, screenY, textureResolution, textureResolution);
-                    }
-                }
-            }
-
-            // Make vegetation visible at night
-            for (Vegetation vegetation : safari.getVegetationList()) {
-                int vegX = vegetation.getCurrentX();
-                int vegY = vegetation.getCurrentY();
-
-                if (vegX >= viewportX && vegX < viewportX + viewportWidth &&
-                        vegY >= viewportY && vegY < viewportY + viewportHeight) {
-
-                    int screenX = (vegX - viewportX) * textureResolution;
-                    int screenY = (vegY - viewportY) * textureResolution;
-                    g2d.fillRect(screenX, screenY, textureResolution, textureResolution);
-                }
-            }
-
-            g2d.dispose();
+            applyNightOverlay(g);
         }
     }
-    // Helper method to determine if an animal is visible at night
+
+    // In GameMap.java, update the applyNightOverlay method
+    private void applyNightOverlay(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g.create();
+
+        // Dark overlay for night time
+        g2d.setColor(new Color(0, 0, 30, 180));
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        // Create visibility areas using DstOut composite
+        g2d.setComposite(AlphaComposite.DstOut);
+
+        // Make roads and water visible with a bright glow effect
+        for (int x = viewportX; x < viewportX + viewportWidth && x < terrain.size(); x++) {
+            for (int y = viewportY; y < viewportY + viewportHeight && y < terrain.get(x).size(); y++) {
+                Landscape tile = terrain.get(x).get(y);
+                if (tile instanceof Road || tile instanceof Water) {
+                    int screenX = (x - viewportX) * textureResolution;
+                    int screenY = (y - viewportY) * textureResolution;
+
+                    // Create a brighter glow for roads and water
+                    g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, 1.0f));
+                    g2d.fillRect(screenX, screenY, textureResolution, textureResolution);
+
+                    // Add a glow around roads and water
+                    g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, 0.7f));
+                    g2d.fillRoundRect(screenX - 5, screenY - 5,
+                            textureResolution + 10, textureResolution + 10, 10, 10);
+                }
+            }
+        }
+
+        // Make vegetation (plants) visible with a bright effect
+        for (Vegetation vegetation : safari.getVegetationList()) {
+            int vegX = vegetation.getCurrentX();
+            int vegY = vegetation.getCurrentY();
+
+            if (isInViewport(vegX, vegY)) {
+                int screenX = (vegX - viewportX) * textureResolution;
+                int screenY = (vegY - viewportY) * textureResolution;
+
+                // Brighter visibility for vegetation
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, 1.0f));
+                g2d.fillRect(screenX, screenY, textureResolution, textureResolution);
+
+                // Add a subtle glow effect around vegetation
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, 0.6f));
+                g2d.fillOval(screenX - 3, screenY - 3, textureResolution + 6, textureResolution + 6);
+            }
+        }
+
+        // Make areas around visible entities visible (rangers and tracked animals)
+        for (Entity entity : entities) {
+            if (entity instanceof Ranger || (entity instanceof Animal && ((Animal) entity).hasLocationChip())) {
+                int entityX = entity.getCurrentX();
+                int entityY = entity.getCurrentY();
+                if (isInViewport(entityX, entityY)) {
+                    int screenX = (entityX - viewportX) * textureResolution + textureResolution / 2;
+                    int screenY = (entityY - viewportY) * textureResolution + textureResolution / 2;
+
+                    // Create a larger, softer glow for rangers and chipped animals
+                    int radius = textureResolution * 3; // Visibility radius
+
+                    // Gradient glow effect
+                    for (int r = radius; r > 0; r -= textureResolution/4) {
+                        float alpha = 1.0f - (float)(radius - r) / radius;
+                        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, alpha));
+                        g2d.fillOval(screenX - r, screenY - r, r * 2, r * 2);
+                    }
+                }
+            }
+        }
+
+        g2d.dispose();
+    }
+    // Helper method to check if coordinates are in viewport
+    private boolean isInViewport(int x, int y) {
+        return x >= viewportX && x < viewportX + viewportWidth &&
+                y >= viewportY && y < viewportY + viewportHeight;
+    }
+
+    // Helper method to determine if animal is visible at night
     private boolean isAnimalVisibleAtNight(Animal animal) {
-        // Check if animal has location chip (to be implemented)
+        // Animals with location chips are always visible
         if (animal.hasLocationChip()) {
             return true;
         }
 
         // Check if animal is near a ranger (within 3 tiles)
-        boolean nearRanger = safari.getRangers().stream()
-                .anyMatch(ranger ->
-                        Math.abs(ranger.getCurrentX() - animal.getCurrentX()) <= 3 &&
-                                Math.abs(ranger.getCurrentY() - animal.getCurrentY()) <= 3);
+        for (Ranger ranger : safari.getRangers()) {
+            if (Math.abs(ranger.getCurrentX() - animal.getCurrentX()) <= 3 &&
+                    Math.abs(ranger.getCurrentY() - animal.getCurrentY()) <= 3) {
+                return true;
+            }
+        }
 
-        // TODO: Check if animal is near tourists when implemented
-
-        return nearRanger;
+        return false;
     }
+
     /*
     @Override
 
@@ -417,6 +416,11 @@ public class GameMap extends JPanel implements MouseWheelListener {
             miniMap.updateViewport(viewportX, viewportY, viewportWidth, viewportHeight);
         }
         repaint();
+    }
+
+    public void setNightTime(boolean isNightTime) {
+        this.isNightTime = isNightTime;
+        repaint(); // Force repaint when night status changes
     }
 
     public Safari getSafari() {

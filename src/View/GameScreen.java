@@ -29,6 +29,7 @@ public class GameScreen extends JFrame {
     private Timer gameLogicTimer;
     private Timer renderTimer;
     private Map<Class<? extends Animal>, BufferedImage> animalImages = new HashMap<>();
+    boolean isNightTime=false;
 
     public GameScreen() {
         setTitle("Safari Mayhem");
@@ -637,7 +638,7 @@ public class GameScreen extends JFrame {
         safari.Update();
         gameMap.update(safari.getLandscapes(), safari.getEntities());
         miniMap.update(safari.getLandscapes(), safari.getAnimalList());
-        updateTime();
+        //updateTime();
         gameMap.repaint();
     }
 
@@ -672,9 +673,9 @@ public class GameScreen extends JFrame {
 
         }
     }
-
+    // In GameScreen.java
     private void updateGameState() {
-        // Increment time
+        // Parse current time
         String currentTime = timeLabel.getText();
         String[] parts = currentTime.split(", ");
         String[] dayPart = parts[0].split(" ");
@@ -683,7 +684,10 @@ public class GameScreen extends JFrame {
         int day = Integer.parseInt(dayPart[1]);
         int hour = Integer.parseInt(timePart[0]);
 
+        // Increment by 1 hour
         hour++;
+
+        // Check for day change
         if (hour >= 24) {
             hour = 0;
             day++;
@@ -698,35 +702,20 @@ public class GameScreen extends JFrame {
             }
         }
 
-        // Update rangers and handle poacher interactions
-        for (Ranger ranger : safari.getRangers()) {
-            ranger.update(safari);
-            if (ranger.hasRepelledPoacher()) {
-                balance += 50; // Bonus for repelling poacher
-                balanceLabel.setText("Balance: $" + balance);
-            }
-        }
-
-        // Spawn poacher every 8 hours
-        if (hour % 8 == 0) {
-            spawnPoachers();
-        }
-
-        // Update poachers and remove those that have been caught or have been present for too long
-        Iterator<Poacher> iterator = safari.getPoachers().iterator();
-        while (iterator.hasNext()) {
-            Poacher poacher = iterator.next();
-            poacher.update(safari);
-            if (poacher.isEscaping() || poacher.getTimePresent() >= 6) {
-                iterator.remove();
-                gameMap.repaint();
-                miniMap.repaint();
-            }
-        }
-
+        // Update time label
         timeLabel.setText(String.format("Day %d, %02d:00", day, hour));
-    }
 
+        // Explicitly set night time status based on current hour
+        isNightTime = (hour >= 18 || hour < 6);
+
+        // Update the game map with night status
+        gameMap.setNightTime(isNightTime);
+
+        // Rest of the updateGameState method...
+        safari.Update();
+        gameMap.update(safari.getLandscapes(), safari.getEntities());
+        miniMap.update(safari.getLandscapes(), safari.getAnimalList());
+    }
     private void spawnPoachers() {
         Random random = new Random();
         int numPoachers = random.nextInt(3) + 1; // 1-3 poachers
