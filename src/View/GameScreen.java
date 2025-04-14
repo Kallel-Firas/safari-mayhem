@@ -494,11 +494,19 @@ public class GameScreen extends JFrame {
     }
 
     public void run() {
-        safari.Update();
-        gameMap.update(safari.getLandscapes(), safari.getEntities());
-        miniMap.update(safari.getLandscapes(), safari.getAnimalList());
-        updateTime();
-        gameMap.repaint();
+        Timer timer1 = new Timer(1000, e -> {
+            // put game updates here
+            safari.Update();
+            gameMap.update(safari.getLandscapes(), safari.getEntities());
+            miniMap.update(safari.getLandscapes(), safari.getAnimalList());
+            updateTime();
+        });
+        Timer timer2 = new Timer(1000/60, e -> {
+            // put render updates here
+            gameMap.repaint();
+        });
+        timer1.start();
+        timer2.start();
     }
 
     private void updateTime() {
@@ -522,7 +530,7 @@ public class GameScreen extends JFrame {
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-        drawAnimals(g);
+//        drawAnimals(g);
     }
 
     private void drawAnimals(Graphics g) {
@@ -543,7 +551,7 @@ public class GameScreen extends JFrame {
         int day = Integer.parseInt(dayPart[1]);
         int hour = Integer.parseInt(timePart[0]);
 
-        hour++;
+//        hour++;
         if (hour >= 24) {
             hour = 0;
             day++;

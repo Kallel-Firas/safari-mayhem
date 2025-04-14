@@ -90,8 +90,7 @@ public class NewGameScreen extends JFrame {
             gameScreen.setLocationRelativeTo(null);
             gameScreen.setVisible(true);
             this.dispose();
-            Timer timer = new Timer(1000, e2 -> gameScreen.run());
-            timer.start();
+            gameScreen.run();
         });
 
         pack();
