@@ -30,6 +30,7 @@ public class MiniMap extends JPanel {
     private Map<Class<? extends Animal>, BufferedImage> animalImages = new HashMap<>();
     private Map<Class<? extends Vegetation>, BufferedImage> vegetationImages = new HashMap<>();
     private Map<Class<? extends Entity>, BufferedImage> entityImages = new HashMap<>();
+    private Map<String, BufferedImage> jeepImages = new HashMap<>();
 
     public MiniMap(Map<Object, BufferedImage> terrainImages, GameMap gameMap) {
         this.terrainImages = terrainImages;
@@ -75,9 +76,25 @@ public class MiniMap extends JPanel {
         try {
             entityImages.put(Poacher.class, ImageIO.read(new File("resources/poacher.png")));
             entityImages.put(Ranger.class, ImageIO.read(new File("resources/ranger.png")));
+            
+            // Load jeep images for each direction
+            jeepImages.put("jeepstraight", loadAndResizeImage("resources/jeepstraight.png"));
+            jeepImages.put("jeepforward", loadAndResizeImage("resources/jeepforward.png"));
+            jeepImages.put("jeepleft", loadAndResizeImage("resources/jeepleft.png"));
+            jeepImages.put("jeepright", loadAndResizeImage("resources/jeepright.png"));
         } catch (IOException e) {
             System.out.println("Error loading entity images: " + e.getMessage());
         }
+    }
+    
+    private BufferedImage loadAndResizeImage(String path) throws IOException {
+        BufferedImage img = ImageIO.read(new File(path));
+        Image scaledImg = img.getScaledInstance(miniMapResolution, miniMapResolution, Image.SCALE_SMOOTH);
+        BufferedImage resized = new BufferedImage(miniMapResolution, miniMapResolution, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = resized.createGraphics();
+        g2d.drawImage(scaledImg, 0, 0, null);
+        g2d.dispose();
+        return resized;
     }
 
     @Override
@@ -131,6 +148,19 @@ public class MiniMap extends JPanel {
             if (img != null) {
                 g.drawImage(img, poacher.getCurrentX() * miniMapResolution,
                         poacher.getCurrentY() * miniMapResolution,
+                        miniMapResolution, miniMapResolution, null);
+            }
+        }
+        
+        // Draw jeeps with directional images
+        for (Jeep jeep : gameMap.getSafari().getJeeps()) {
+            BufferedImage img = jeepImages.get(jeep.getCurrentImageKey());
+            if (img != null) {
+                // Use visual position for smooth animation, but scale down to minimap size
+                int visualX = jeep.getVisualX() / 32; // Convert pixels back to tiles
+                int visualY = jeep.getVisualY() / 32;
+                g.drawImage(img, visualX * miniMapResolution,
+                        visualY * miniMapResolution,
                         miniMapResolution, miniMapResolution, null);
             }
         }

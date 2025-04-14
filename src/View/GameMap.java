@@ -35,6 +35,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
     private Map<Object, BufferedImage> terrainImages = new HashMap<>();
     private Map<Object, BufferedImage> entityImages = new HashMap<>();
     private Map<String, BufferedImage> roadImages = new HashMap<>();
+    private Map<String, BufferedImage> jeepImages = new HashMap<>();
 
     private final int textureResolution = 32;
 
@@ -79,6 +80,12 @@ public class GameMap extends JPanel implements MouseWheelListener {
             entityImages.put(Lion.class, ImageIO.read(new File("resources/lion.png")));
             entityImages.put(Poacher.class, ImageIO.read(new File("resources/poacher.png")));
             entityImages.put(Ranger.class, ImageIO.read(new File("resources/ranger.png")));
+            
+            // Load and resize all jeep images
+            loadAndResizeJeepImage(jeepImages, "jeepstraight", "resources/jeepstraight.png");
+            loadAndResizeJeepImage(jeepImages, "jeepforward", "resources/jeepforward.png");
+            loadAndResizeJeepImage(jeepImages, "jeepleft", "resources/jeepleft.png");
+            loadAndResizeJeepImage(jeepImages, "jeepright", "resources/jeepright.png");
 
         } catch (IOException e) {
             System.out.println("Error loading image: " + e.getMessage());
@@ -176,13 +183,38 @@ public class GameMap extends JPanel implements MouseWheelListener {
 
         // Draw entities (animals, poachers, rangers)
         for (Entity entity : entities) {
-            BufferedImage image = entityImages.get(entity.getClass());
-            int entityX = entity.getCurrentX();
-            int entityY = entity.getCurrentY();
-            if (entityX >= viewportX && entityX < viewportX + viewportWidth &&
-                entityY >= viewportY && entityY < viewportY + viewportHeight) {
-                g.drawImage(image, (entityX - viewportX) * textureResolution,
-                          (entityY - viewportY) * textureResolution, null);
+            // Special handling for jeeps
+            if (entity instanceof Jeep) {
+                Jeep jeep = (Jeep) entity;
+                int jeepX = jeep.getCurrentX();
+                int jeepY = jeep.getCurrentY();
+                
+                if (jeepX >= viewportX && jeepX < viewportX + viewportWidth &&
+                    jeepY >= viewportY && jeepY < viewportY + viewportHeight) {
+                    // Get the appropriate jeep image based on direction
+                    BufferedImage jeepImage = jeepImages.get(jeep.getCurrentImageKey());
+                    if (jeepImage != null) {
+                        // Use visual position for smooth animation
+                        int visualX = jeep.getVisualX();
+                        int visualY = jeep.getVisualY();
+                        
+                        // Convert to viewport coordinates
+                        int screenX = visualX - (viewportX * textureResolution);
+                        int screenY = visualY - (viewportY * textureResolution);
+                        
+                        g.drawImage(jeepImage, screenX, screenY, textureResolution, textureResolution, null);
+                    }
+                }
+            } else {
+                // Regular entity drawing
+                BufferedImage image = entityImages.get(entity.getClass());
+                int entityX = entity.getCurrentX();
+                int entityY = entity.getCurrentY();
+                if (entityX >= viewportX && entityX < viewportX + viewportWidth &&
+                    entityY >= viewportY && entityY < viewportY + viewportHeight) {
+                    g.drawImage(image, (entityX - viewportX) * textureResolution,
+                              (entityY - viewportY) * textureResolution, null);
+                }
             }
         }
 
@@ -244,5 +276,15 @@ public class GameMap extends JPanel implements MouseWheelListener {
 
     public boolean isValidRoadStartPoint(int x, int y) {
         return roadStartPoints.contains(new Point(x, y));
+    }
+
+    private void loadAndResizeJeepImage(Map<String, BufferedImage> jeepImages, String key, String filePath) throws IOException {
+        BufferedImage jeepImage = ImageIO.read(new File(filePath));
+        Image scaledJeep = jeepImage.getScaledInstance(textureResolution, textureResolution, Image.SCALE_SMOOTH);
+        BufferedImage resizedJeep = new BufferedImage(textureResolution, textureResolution, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = resizedJeep.createGraphics();
+        g2d.drawImage(scaledJeep, 0, 0, null);
+        g2d.dispose();
+        jeepImages.put(key, resizedJeep);
     }
 }
