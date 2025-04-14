@@ -518,11 +518,11 @@ public class GameScreen extends JFrame {
         int day = Integer.parseInt(dayPart[1]);
         int hour = Integer.parseInt(timePart[0]);
 
-        hour++;
-        if (hour >= 24) {
-            hour = 0;
-            day++;
-        }
+//        hour++;
+//        if (hour >= 24) {
+//            hour = 0;
+//            day++;
+//        }
 
         timeLabel.setText(String.format("Day %d, %02d:00", day, hour));
     }
@@ -551,7 +551,7 @@ public class GameScreen extends JFrame {
         int day = Integer.parseInt(dayPart[1]);
         int hour = Integer.parseInt(timePart[0]);
 
-//        hour++;
+        hour++;
         if (hour >= 24) {
             hour = 0;
             day++;

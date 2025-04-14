@@ -6,8 +6,8 @@ import javax.swing.*;
 public abstract class Entity {
     private int currentX;
     private int currentY;
-    private int visualX = 0;
-    private int visualY = 0;
+    private int visualX;
+    private int visualY;
 
     public Entity() {
     }
