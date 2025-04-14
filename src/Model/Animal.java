@@ -28,10 +28,6 @@ public abstract class Animal extends Entity {
         return currentY;
     }
 
-    public void setCurrentY(int currentY) {
-        this.currentY = currentY;
-    }
-
     public void setCurrentX(int currentX) {
         this.currentX = currentX;
     }
@@ -196,6 +192,7 @@ public void Move(int x, int y, List<List<Landscape>> map, List<Entity> entities)
         int newX = currentX + xDirection;
         if (isValidMove(newX, currentY, map, entities)) {
             currentX = newX;
+            animateMovement(newX, currentY);
             return;
         }
     } else if (!moveInXFirst && yDirection != 0) {
@@ -203,6 +200,7 @@ public void Move(int x, int y, List<List<Landscape>> map, List<Entity> entities)
         int newY = currentY + yDirection;
         if (isValidMove(currentX, newY, map, entities)) {
             currentY = newY;
+            animateMovement(currentX, newY);
             return;
         }
     }
@@ -213,6 +211,7 @@ public void Move(int x, int y, List<List<Landscape>> map, List<Entity> entities)
         int newY = currentY + yDirection;
         if (isValidMove(currentX, newY, map, entities)) {
             currentY = newY;
+            animateMovement(currentX, newY);
             return;
         }
     } else if (!moveInXFirst && xDirection != 0) {
@@ -220,6 +219,7 @@ public void Move(int x, int y, List<List<Landscape>> map, List<Entity> entities)
         int newX = currentX + xDirection;
         if (isValidMove(newX, currentY, map, entities)) {
             currentX = newX;
+            animateMovement(newX, currentY);
             return;
         }
     }
@@ -244,6 +244,7 @@ public void Move(int x, int y, List<List<Landscape>> map, List<Entity> entities)
         if (isValidMove(newX, newY, map, entities)) {
             currentX = newX;
             currentY = newY;
+            animateMovement(newX, newY);
             return;
         }
     }
