@@ -1,7 +1,7 @@
 package Model;
 
 public class Road extends Land {
-    private int price = 250;
+    private int price = 10;
     private boolean entrance = false;
     private boolean exit = false;
     private String imageKey = "road1"; // Default to straight road

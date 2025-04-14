@@ -3,7 +3,7 @@ package Model;
 import java.util.*;
 
 public class Jeep extends Entity {
-    private int price = 2000;
+    private int price = 500;
     private int capacity = 4;
     private int rentalPrice;
     private int currentPassengers;
@@ -92,8 +92,8 @@ public class Jeep extends Entity {
             animateMovement(nextPosition[0], nextPosition[1]);
             
             // Update the logical position (animateMovement handles visual position)
-            setCurrentX(nextPosition[0]);
-            setCurrentY(nextPosition[1]);
+            MoveX(nextPosition[0]);
+            MoveY(nextPosition[1]);
             
             routeIndex++;
             

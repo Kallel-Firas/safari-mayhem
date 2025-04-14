@@ -211,18 +211,11 @@ public class GameMap extends JPanel implements MouseWheelListener {
                 int entityX = entity.getCurrentX();
                 int entityY = entity.getCurrentY();
                 if (entityX >= viewportX && entityX < viewportX + viewportWidth &&
-                    entityY >= viewportY && entityY < viewportY + viewportHeight) {
-                    g.drawImage(image, (entityX - viewportX) * textureResolution,
-                              (entityY - viewportY) * textureResolution, null);
+                        entityY >= viewportY && entityY < viewportY + viewportHeight) {
+                    g.drawImage(image, entity.getVisualX() - viewportX * textureResolution,
+                            entity.getVisualY() - viewportY * textureResolution,
+                            textureResolution, textureResolution, null);
                 }
-            BufferedImage image = entityImages.get(entity.getClass());
-            int entityX = entity.getCurrentX();
-            int entityY = entity.getCurrentY();
-            if (entityX >= viewportX && entityX < viewportX + viewportWidth &&
-                entityY >= viewportY && entityY < viewportY + viewportHeight) {
-                g.drawImage(image, entity.getVisualX() - viewportX * textureResolution,
-                          entity.getVisualY() - viewportY * textureResolution,
-                          textureResolution, textureResolution, null);
             }
         }
 

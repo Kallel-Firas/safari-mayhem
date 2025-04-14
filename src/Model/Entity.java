@@ -16,6 +16,13 @@ public abstract class Entity {
         return currentX;
     }
 
+    public void MoveX(int x) {
+        this.currentX = x;
+    }
+    public void MoveY(int y) {
+        this.currentY = y;
+    }
+
     public void setCurrentX(int x) {
         this.currentX = x;
         this.visualX = x*32;
