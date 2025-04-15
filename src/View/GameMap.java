@@ -213,7 +213,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
         g2d.setColor(new Color(0, 0, 30, 180));
         g2d.fillRect(0, 0, getWidth(), getHeight());
 
-        // Create visibility areas using DstOut composite
+        // Create visibility areas using DstOut composite (removes darkness)
         g2d.setComposite(AlphaComposite.DstOut);
 
         // Make roads and water visible with a bright glow effect
@@ -224,14 +224,20 @@ public class GameMap extends JPanel implements MouseWheelListener {
                     int screenX = (x - viewportX) * textureResolution;
                     int screenY = (y - viewportY) * textureResolution;
 
-                    // Create a brighter glow for roads and water
+                    // Make the tile fully visible (no darkness) - 100% removal
                     g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, 1.0f));
                     g2d.fillRect(screenX, screenY, textureResolution, textureResolution);
 
-                    // Add a glow around roads and water
-                    g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, 0.7f));
-                    g2d.fillRoundRect(screenX - 5, screenY - 5,
-                            textureResolution + 10, textureResolution + 10, 10, 10);
+                    // Make surrounding blocks completely visible (100% removal of darkness)
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dy = -1; dy <= 1; dy++) {
+                            if (dx == 0 && dy == 0) continue; // Skip the center tile
+
+                            int surroundX = screenX + dx * textureResolution;
+                            int surroundY = screenY + dy * textureResolution;
+                            g2d.fillRect(surroundX, surroundY, textureResolution, textureResolution);
+                        }
+                    }
                 }
             }
         }
@@ -245,17 +251,24 @@ public class GameMap extends JPanel implements MouseWheelListener {
                 int screenX = (vegX - viewportX) * textureResolution;
                 int screenY = (vegY - viewportY) * textureResolution;
 
-                // Brighter visibility for vegetation
+                // Make vegetation fully visible - 100% removal
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, 1.0f));
                 g2d.fillRect(screenX, screenY, textureResolution, textureResolution);
 
-                // Add a subtle glow effect around vegetation
-                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, 0.6f));
-                g2d.fillOval(screenX - 3, screenY - 3, textureResolution + 6, textureResolution + 6);
+                // Make surrounding blocks completely visible (100% removal of darkness)
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dy = -1; dy <= 1; dy++) {
+                        if (dx == 0 && dy == 0) continue;
+
+                        int surroundX = screenX + dx * textureResolution;
+                        int surroundY = screenY + dy * textureResolution;
+                        g2d.fillRect(surroundX, surroundY, textureResolution, textureResolution);
+                    }
+                }
             }
         }
 
-        // Make areas around visible entities visible (rangers and tracked animals)
+        // Make areas around rangers and tracked animals visible
         for (Entity entity : entities) {
             if (entity instanceof Ranger || (entity instanceof Animal && ((Animal) entity).hasLocationChip())) {
                 int entityX = entity.getCurrentX();
@@ -264,10 +277,9 @@ public class GameMap extends JPanel implements MouseWheelListener {
                     int screenX = (entityX - viewportX) * textureResolution + textureResolution / 2;
                     int screenY = (entityY - viewportY) * textureResolution + textureResolution / 2;
 
-                    // Create a larger, softer glow for rangers and chipped animals
-                    int radius = textureResolution * 3; // Visibility radius
+                    int radius = textureResolution * 3;
 
-                    // Gradient glow effect
+                    // Create gradient visibility effect
                     for (int r = radius; r > 0; r -= textureResolution/4) {
                         float alpha = 1.0f - (float)(radius - r) / radius;
                         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, alpha));
