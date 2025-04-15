@@ -36,3 +36,11 @@ test-job:
   script:
     - mvn test
 
+# deploy
+deploy-job:
+  stage: deploy
+  script:
+    - mvn install
+  artifacts:
+    paths:
+      - target/*.jar
