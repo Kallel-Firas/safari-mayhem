@@ -216,33 +216,22 @@ public class GameMap extends JPanel implements MouseWheelListener {
         // Create visibility areas using DstOut composite (removes darkness)
         g2d.setComposite(AlphaComposite.DstOut);
 
-        // Make roads and water visible with a bright glow effect
+        // Make water and roads completely visible (no night effect)
         for (int x = viewportX; x < viewportX + viewportWidth && x < terrain.size(); x++) {
             for (int y = viewportY; y < viewportY + viewportHeight && y < terrain.get(x).size(); y++) {
                 Landscape tile = terrain.get(x).get(y);
-                if (tile instanceof Road || tile instanceof Water) {
+                if (tile instanceof Water || tile instanceof Road) {
                     int screenX = (x - viewportX) * textureResolution;
                     int screenY = (y - viewportY) * textureResolution;
 
-                    // Make the tile fully visible (no darkness) - 100% removal
+                    // Make the tile completely visible (no night effect)
                     g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, 1.0f));
                     g2d.fillRect(screenX, screenY, textureResolution, textureResolution);
-
-                    // Make surrounding blocks completely visible (100% removal of darkness)
-                    for (int dx = -1; dx <= 1; dx++) {
-                        for (int dy = -1; dy <= 1; dy++) {
-                            if (dx == 0 && dy == 0) continue; // Skip the center tile
-
-                            int surroundX = screenX + dx * textureResolution;
-                            int surroundY = screenY + dy * textureResolution;
-                            g2d.fillRect(surroundX, surroundY, textureResolution, textureResolution);
-                        }
-                    }
                 }
             }
         }
 
-        // Make vegetation (plants) visible with a bright effect
+        // Make vegetation completely visible (no night effect)
         for (Vegetation vegetation : safari.getVegetationList()) {
             int vegX = vegetation.getCurrentX();
             int vegY = vegetation.getCurrentY();
@@ -251,20 +240,9 @@ public class GameMap extends JPanel implements MouseWheelListener {
                 int screenX = (vegX - viewportX) * textureResolution;
                 int screenY = (vegY - viewportY) * textureResolution;
 
-                // Make vegetation fully visible - 100% removal
+                // Make the vegetation completely visible (no night effect)
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.DST_OUT, 1.0f));
                 g2d.fillRect(screenX, screenY, textureResolution, textureResolution);
-
-                // Make surrounding blocks completely visible (100% removal of darkness)
-                for (int dx = -1; dx <= 1; dx++) {
-                    for (int dy = -1; dy <= 1; dy++) {
-                        if (dx == 0 && dy == 0) continue;
-
-                        int surroundX = screenX + dx * textureResolution;
-                        int surroundY = screenY + dy * textureResolution;
-                        g2d.fillRect(surroundX, surroundY, textureResolution, textureResolution);
-                    }
-                }
             }
         }
 
@@ -309,6 +287,35 @@ public class GameMap extends JPanel implements MouseWheelListener {
             if (Math.abs(ranger.getCurrentX() - animal.getCurrentX()) <= 3 &&
                     Math.abs(ranger.getCurrentY() - animal.getCurrentY()) <= 3) {
                 return true;
+            }
+        }
+
+        // Check if animal is near water, plants, or roads
+        int animalX = animal.getCurrentX();
+        int animalY = animal.getCurrentY();
+        
+        // Check surrounding 3x3 area
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dy = -3; dy <= 3; dy++) {
+                int checkX = animalX + dx;
+                int checkY = animalY + dy;
+                
+                if (checkX >= 0 && checkX < terrain.size() && 
+                    checkY >= 0 && checkY < terrain.get(checkX).size()) {
+                    
+                    Landscape tile = terrain.get(checkX).get(checkY);
+                    // Check for water or road
+                    if (tile instanceof Water || tile instanceof Road) {
+                        return true;
+                    }
+                    
+                    // Check for vegetation
+                    for (Vegetation vegetation : safari.getVegetationList()) {
+                        if (vegetation.getCurrentX() == checkX && vegetation.getCurrentY() == checkY) {
+                            return true;
+                        }
+                    }
+                }
             }
         }
 
