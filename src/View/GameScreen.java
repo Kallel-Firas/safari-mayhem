@@ -361,6 +361,32 @@ public class GameScreen extends JFrame {
             return;
         }
 
+        // Handle location chip placement
+        if (selectedItemType.equals("chip")) {
+            // Find the animal at this position
+            Animal targetAnimal = safari.getAnimalList().stream()
+                .filter(animal -> animal.getCurrentX() == x && animal.getCurrentY() == y)
+                .findFirst()
+                .orElse(null);
+
+            if (targetAnimal == null) {
+                showPlacementError("No animal found at this location!");
+                return;
+            }
+
+            // Mark the animal as having a location chip
+            targetAnimal.setHasLocationChip(true);
+            System.out.println("Location chip placed on animal at (" + x + "," + y + ")");
+
+            // Reset selection and cursor
+            selectedItem = null;
+            selectedItemType = null;
+            setCursor(Cursor.getDefaultCursor());
+            gameMap.repaint();
+            miniMap.repaint();
+            return;
+        }
+
         // Existing placement logic for other items
         try {
             switch (selectedItemType) {
@@ -431,6 +457,7 @@ public class GameScreen extends JFrame {
             case "Water": refundAmount = 200; break;
             case "Dirt": refundAmount = 20; break;
             case "Road": refundAmount = 250; break;
+            case "Location Chip": refundAmount = 300; break;
         }
         balance += refundAmount;
         balanceLabel.setText("Balance: $" + balance);
@@ -481,6 +508,7 @@ public class GameScreen extends JFrame {
         addShopItem(panel, "resources/elephant.png", "Elephant", 800, "animal");
         addShopItem(panel, "resources/sheep.png", "Sheep", 200, "animal");
         addShopItem(panel, "resources/ranger.png", "Ranger", 500, "ranger");
+        addShopItem(panel, "resources/location_chip.png", "Location Chip", 300, "chip");
 
         return new JScrollPane(panel);
     }
@@ -676,6 +704,9 @@ public class GameScreen extends JFrame {
             }
         }
 
+        // Update the game map with current hour for day/night cycle
+        gameMap.setCurrentHour(hour);
+
         // Update rangers and handle poacher interactions
         for (Ranger ranger : safari.getRangers()) {
             ranger.update(safari);
@@ -685,9 +716,9 @@ public class GameScreen extends JFrame {
             }
         }
 
-        // Spawn poacher every 8 hours
+        // Spawn one poacher every 8 hours
         if (hour % 8 == 0) {
-            spawnPoachers();
+            spawnPoacher();
         }
 
         // Update poachers and remove those that have been caught or have been present for too long
@@ -695,7 +726,8 @@ public class GameScreen extends JFrame {
         while (iterator.hasNext()) {
             Poacher poacher = iterator.next();
             poacher.update(safari);
-            if (poacher.isEscaping() || poacher.getTimePresent() >= 6) {
+            // Only remove poachers if they're escaping or have been present for exactly 18 hours
+            if (poacher.isEscaping() || poacher.getTimePresent() == 18) {
                 iterator.remove();
                 gameMap.repaint();
                 miniMap.repaint();
@@ -710,36 +742,32 @@ public class GameScreen extends JFrame {
         timeLabel.setText(String.format("Day %d, %02d:00", day, hour));
     }
 
-    private void spawnPoachers() {
+    private void spawnPoacher() {
         Random random = new Random();
-        int numPoachers = random.nextInt(3) + 1; // 1-3 poachers
+        boolean validPosition = false;
+        int attempts = 0;
 
-        for (int i = 0; i < numPoachers; i++) {
-            boolean validPosition = false;
-            int attempts = 0;
+        // Try to find a valid position (max 10 attempts)
+        while (!validPosition && attempts < 10) {
+            final int currentX = random.nextInt(safari.getLandscapes().size());
+            final int currentY = random.nextInt(safari.getLandscapes().get(0).size());
 
-            // Try to find a valid position (max 10 attempts)
-            while (!validPosition && attempts < 10) {
-                final int currentX = random.nextInt(safari.getLandscapes().size());
-                final int currentY = random.nextInt(safari.getLandscapes().get(0).size());
+            // Check if position is valid (not water, not occupied by animals, not occupied by vegetation)
+            if (!(safari.getLandscapes().get(currentX).get(currentY) instanceof Water) &&
+                !safari.getAnimalList().stream().anyMatch(a -> a.getCurrentX() == currentX && a.getCurrentY() == currentY) &&
+                !safari.getVegetationList().stream().anyMatch(v -> v.getCurrentX() == currentX && v.getCurrentY() == currentY)) {
 
-                // Check if position is valid (not water, not occupied by animals, not occupied by vegetation)
-                if (!(safari.getLandscapes().get(currentX).get(currentY) instanceof Water) &&
-                    !safari.getAnimalList().stream().anyMatch(a -> a.getCurrentX() == currentX && a.getCurrentY() == currentY) &&
-                    !safari.getVegetationList().stream().anyMatch(v -> v.getCurrentX() == currentX && v.getCurrentY() == currentY)) {
+                // Check if there are any rangers nearby (within 5 tiles)
+                boolean rangerNearby = safari.getRangers().stream()
+                    .anyMatch(r -> Math.abs(r.getCurrentX() - currentX) <= 5 && Math.abs(r.getCurrentY() - currentY) <= 5);
 
-                    // Check if there are any rangers nearby (within 5 tiles)
-                    boolean rangerNearby = safari.getRangers().stream()
-                        .anyMatch(r -> Math.abs(r.getCurrentX() - currentX) <= 5 && Math.abs(r.getCurrentY() - currentY) <= 5);
-
-                    if (!rangerNearby) {
-                        Poacher poacher = new Poacher(currentX, currentY);
-                        safari.addPoacher(poacher);
-                        validPosition = true;
-                    }
+                if (!rangerNearby) {
+                    Poacher poacher = new Poacher(currentX, currentY);
+                    safari.addPoacher(poacher);
+                    validPosition = true;
                 }
-                attempts++;
             }
+            attempts++;
         }
     }
 

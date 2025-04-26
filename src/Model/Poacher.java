@@ -5,9 +5,10 @@ import java.util.Random;
 
 public class Poacher extends Entity {
     private static final int DETECTION_RADIUS = 7; // Poachers can detect animals within 7 tiles
-    private static final int HUNTING_RADIUS = 1; // Poachers can only hunt animals within 1 tile
+    private static final int HUNTING_RADIUS = 3; // Poachers can hunt animals within 3 tiles
     private static final double HUNTING_SUCCESS_RATE = 0.3; // 30% chance of success
     private int hoursOnMap = 0;
+    private int restHours = 0;
     private boolean hasCapturedAnimal = false;
     private boolean escaping = false;
     private float targetX;
@@ -15,6 +16,7 @@ public class Poacher extends Entity {
     private float moveSpeed = 0.5f; // Speed for 60 FPS movement
     private Random random = new Random();
     private Animal targetAnimal = null;
+    private boolean isResting = false;
 
     public Poacher(int x, int y) {
         setCurrentX(x);
@@ -52,8 +54,8 @@ public class Poacher extends Entity {
         } else {
             hoursOnMap++;
             
-            // Only check time limit if not actively pursuing a target
-            if (hoursOnMap >= 6 && !hasCapturedAnimal && targetAnimal == null) {
+            // Check if poacher has been on map for 18 hours
+            if (hoursOnMap >= 18) {
                 escaping = true;
                 return;
             }
@@ -70,6 +72,15 @@ public class Poacher extends Entity {
                 return;
             }
 
+            if (isResting) {
+                restHours++;
+                if (restHours >= 2) {
+                    isResting = false;
+                    restHours = 0;
+                }
+                return;
+            }
+
             if (!hasCapturedAnimal) {
                 if (targetAnimal == null || !isInDetectionRange(targetAnimal)) {
                     findNewTarget(safari);
@@ -77,11 +88,21 @@ public class Poacher extends Entity {
                 
                 if (targetAnimal != null) {
                     moveTowardsTarget(safari);
+                    // Check if we've moved our vision radius
+                    if (hasMovedVisionRadius()) {
+                        isResting = true;
+                    }
                 } else {
                     wander(safari);
                 }
             }
         }
+    }
+
+    private boolean hasMovedVisionRadius() {
+        int dx = getCurrentX() - (int)targetX;
+        int dy = getCurrentY() - (int)targetY;
+        return Math.sqrt(dx*dx + dy*dy) >= DETECTION_RADIUS;
     }
 
     private void findNewTarget(Safari safari) {
@@ -117,34 +138,49 @@ public class Poacher extends Entity {
 
     private void moveTowardsTarget(Safari safari) {
         if (targetAnimal != null) {
+            // Update target position in case animal moved
             targetX = targetAnimal.getCurrentX();
             targetY = targetAnimal.getCurrentY();
             
-            float dx = targetX - getCurrentX();
-            float dy = targetY - getCurrentY();
-            float distance = (float) Math.sqrt(dx * dx + dy * dy);
+            // Calculate direction to target
+            int dx = (int)targetX - getCurrentX();
+            int dy = (int)targetY - getCurrentY();
             
-            if (distance > 0) {
-                dx /= distance;
-                dy /= distance;
-                
-                float newX = getCurrentX() + dx * moveSpeed;
-                float newY = getCurrentY() + dy * moveSpeed;
-                
-                // Try to move in both directions if one is blocked
-                if (!isValidPosition(safari, (int) newX, (int) newY)) {
-                    if (isValidPosition(safari, (int) newX, getCurrentY())) {
-                        setCurrentX((int) newX);
-                    } else if (isValidPosition(safari, getCurrentX(), (int) newY)) {
-                        setCurrentY((int) newY);
-                    }
+            // If we're already at the target, don't move
+            if (dx == 0 && dy == 0) {
+                return;
+            }
+            
+            // Try to move in the direction of the target
+            int newX = getCurrentX();
+            int newY = getCurrentY();
+            
+            // Move in the direction with the larger difference
+            if (Math.abs(dx) > Math.abs(dy)) {
+                newX += (int)Math.signum(dx);
+            } else {
+                newY += (int)Math.signum(dy);
+            }
+            
+            // If the primary move is invalid, try the other direction
+            if (!isValidPosition(safari, newX, newY)) {
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    newX = getCurrentX();
+                    newY += (int)Math.signum(dy);
                 } else {
-                    setCurrentX((int) newX);
-                    setCurrentY((int) newY);
+                    newY = getCurrentY();
+                    newX += (int)Math.signum(dx);
                 }
             }
             
-            // Attempt to hunt as soon as we're in range
+            // If we found a valid position, move there
+            if (isValidPosition(safari, newX, newY)) {
+                setCurrentX(newX);
+                setCurrentY(newY);
+                animateMovement(newX, newY);
+            }
+            
+            // Only attempt to hunt if we're within hunting range
             if (isInHuntingRange(targetAnimal)) {
                 attemptHunt(safari);
             }
@@ -154,15 +190,19 @@ public class Poacher extends Entity {
     private void wander(Safari safari) {
         // Randomly change direction every few updates
         if (random.nextInt(100) < 5) {
-            targetX = getCurrentX() + random.nextInt(5) - 2;
-            targetY = getCurrentY() + random.nextInt(5) - 2;
+            int newX = getCurrentX() + random.nextInt(3) - 1; // -1, 0, or 1
+            int newY = getCurrentY() + random.nextInt(3) - 1; // -1, 0, or 1
             
             // Ensure target is within bounds
-            targetX = Math.max(0, Math.min(safari.getLandscapes().size() - 1, targetX));
-            targetY = Math.max(0, Math.min(safari.getLandscapes().get(0).size() - 1, targetY));
+            newX = Math.max(0, Math.min(safari.getLandscapes().size() - 1, newX));
+            newY = Math.max(0, Math.min(safari.getLandscapes().get(0).size() - 1, newY));
+            
+            if (isValidPosition(safari, newX, newY)) {
+                setCurrentX(newX);
+                setCurrentY(newY);
+                animateMovement(newX, newY);
+            }
         }
-        
-        moveTowardsTarget(safari);
     }
 
     private void moveTowardsEdge(Safari safari) {
@@ -180,6 +220,7 @@ public class Poacher extends Entity {
         int minDist = Math.min(Math.min(distToLeft, distToRight), Math.min(distToTop, distToBottom));
         
         // Set target position to the nearest edge
+        int targetX, targetY;
         if (minDist == distToLeft) {
             targetX = 0;
             targetY = getCurrentY();
@@ -194,7 +235,24 @@ public class Poacher extends Entity {
             targetY = mapHeight - 1;
         }
 
-        moveTowardsTarget(safari);
+        // Move one step towards the target edge
+        int dx = targetX - getCurrentX();
+        int dy = targetY - getCurrentY();
+        
+        int newX = getCurrentX();
+        int newY = getCurrentY();
+        
+        if (Math.abs(dx) > Math.abs(dy)) {
+            newX += (int)Math.signum(dx);
+        } else {
+            newY += (int)Math.signum(dy);
+        }
+        
+        if (isValidPosition(safari, newX, newY)) {
+            setCurrentX(newX);
+            setCurrentY(newY);
+            animateMovement(newX, newY);
+        }
     }
 
     private boolean isValidPosition(Safari safari, int x, int y) {
@@ -280,4 +338,5 @@ public class Poacher extends Entity {
         return hasCapturedAnimal;
     }
 }
+
 

@@ -52,6 +52,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
     private BufferedImage rangerImage;
 
     private Set<Point> roadStartPoints; // Store valid road start points
+    private int currentHour = 0; // Track current hour for day/night cycle
 
     public GameMap(Safari safari) {
         this.safari = safari;
@@ -127,6 +128,15 @@ public class GameMap extends JPanel implements MouseWheelListener {
     public void update(List<List<Landscape>> terrain, List<Entity> entities) {
         this.terrain = terrain;
         this.entities = entities;
+    }
+
+    public void setCurrentHour(int hour) {
+        this.currentHour = hour;
+    }
+
+    private boolean isNightTime() {
+        // Night time is from 20:00 to 02:00 (6 hours)
+        return currentHour >= 20 || currentHour < 2;
     }
 
     @Override
@@ -210,8 +220,53 @@ public class GameMap extends JPanel implements MouseWheelListener {
                 BufferedImage image = entityImages.get(entity.getClass());
                 int entityX = entity.getCurrentX();
                 int entityY = entity.getCurrentY();
+                
+                // Check if entity is in viewport
                 if (entityX >= viewportX && entityX < viewportX + viewportWidth &&
-                        entityY >= viewportY && entityY < viewportY + viewportHeight) {
+                    entityY >= viewportY && entityY < viewportY + viewportHeight) {
+                    
+                    // During nighttime, check visibility for animals
+                    if (isNightTime() && entity instanceof Animal) {
+                        boolean isVisible = false;
+                        
+                        // Check if animal has a location chip
+                        if (((Animal)entity).hasLocationChip()) {
+                            isVisible = true;
+                        }
+                        
+                        // Check proximity to rangers
+                        if (!isVisible) {
+                            for (Ranger ranger : safari.getRangers()) {
+                                int dx = ranger.getCurrentX() - entityX;
+                                int dy = ranger.getCurrentY() - entityY;
+                                double distance = Math.sqrt(dx * dx + dy * dy);
+                                if (distance <= 3) { // Visible within 3 tiles of rangers
+                                    isVisible = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Check proximity to jeeps (tourists)
+                        if (!isVisible) {
+                            for (Jeep jeep : safari.getJeeps()) {
+                                int dx = jeep.getCurrentX() - entityX;
+                                int dy = jeep.getCurrentY() - entityY;
+                                double distance = Math.sqrt(dx * dx + dy * dy);
+                                if (distance <= 3) { // Visible within 3 tiles of jeeps
+                                    isVisible = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // If not visible at night, skip drawing
+                        if (!isVisible) {
+                            continue;
+                        }
+                    }
+                    
+                    // Draw the entity
                     g.drawImage(image, entity.getVisualX() - viewportX * textureResolution,
                             entity.getVisualY() - viewportY * textureResolution,
                             textureResolution, textureResolution, null);
@@ -228,6 +283,91 @@ public class GameMap extends JPanel implements MouseWheelListener {
                 vegY >= viewportY && vegY < viewportY + viewportHeight) {
                 g.drawImage(image, (vegX - viewportX) * textureResolution,
                           (vegY - viewportY) * textureResolution, null);
+            }
+        }
+
+        // Add night time overlay if it's night
+        if (isNightTime()) {
+            // Create a semi-transparent dark overlay
+            g.setColor(new Color(0, 0, 0, 150)); // Dark overlay with 150 alpha (out of 255)
+            g.fillRect(0, 0, getWidth(), getHeight());
+
+            // Draw lighting effects around roads, trees, and water
+            for (int x = viewportX; x < viewportX + viewportWidth && x < terrain.size(); x++) {
+                for (int y = viewportY; y < viewportY + viewportHeight && y < terrain.get(x).size(); y++) {
+                    Landscape currentTile = terrain.get(x).get(y);
+                    
+                    // Check if this tile needs lighting
+                    if (currentTile instanceof Road || currentTile instanceof Water) {
+                        // Create a radial gradient for the light effect
+                        int centerX = (x - viewportX) * textureResolution + textureResolution/2;
+                        int centerY = (y - viewportY) * textureResolution + textureResolution/2;
+                        int radius = textureResolution * 2; // Light radius is 2 tiles
+                        
+                        // Create a radial gradient for the light
+                        for (int r = radius; r > 0; r--) {
+                            float alpha = (float)(radius - r) / radius;
+                            alpha = alpha * 0.08f; // Reduced maximum brightness to 8%
+                            g.setColor(new Color(1f, 1f, 1f, alpha));
+                            g.fillOval(centerX - r, centerY - r, r * 2, r * 2);
+                        }
+                    }
+                }
+            }
+
+            // Draw lighting effects for trees and bushes
+            for (Vegetation vegetation : safari.getVegetationList()) {
+                if (vegetation instanceof Tree || vegetation instanceof Bush) {
+                    int vegX = vegetation.getCurrentX();
+                    int vegY = vegetation.getCurrentY();
+                    if (vegX >= viewportX && vegX < viewportX + viewportWidth &&
+                        vegY >= viewportY && vegY < viewportY + viewportHeight) {
+                        // Create a radial gradient for the light effect
+                        int centerX = (vegX - viewportX) * textureResolution + textureResolution/2;
+                        int centerY = (vegY - viewportY) * textureResolution + textureResolution/2;
+                        int radius = textureResolution * 2; // Light radius is 2 tiles
+                        
+                        // Create a radial gradient for the light
+                        for (int r = radius; r > 0; r--) {
+                            float alpha = (float)(radius - r) / radius;
+                            alpha = alpha * 0.05f; // Reduced maximum brightness to 8%
+                            g.setColor(new Color(1f, 1f, 1f, alpha));
+                            g.fillOval(centerX - r, centerY - r, r * 2, r * 2);
+                        }
+                    }
+                }
+            }
+
+            // Redraw the lit objects to make them visible
+            for (int x = viewportX; x < viewportX + viewportWidth && x < terrain.size(); x++) {
+                for (int y = viewportY; y < viewportY + viewportHeight && y < terrain.get(x).size(); y++) {
+                    Landscape currentTile = terrain.get(x).get(y);
+                    if (currentTile instanceof Road || currentTile instanceof Water) {
+                        BufferedImage image = terrainImages.get(currentTile.getClass());
+                        if (image != null) {
+                            g.drawImage(image, (x - viewportX) * textureResolution,
+                                      (y - viewportY) * textureResolution,
+                                      textureResolution, textureResolution, null);
+                        }
+                    }
+                }
+            }
+
+            // Redraw trees and bushes to make them visible
+            for (Vegetation vegetation : safari.getVegetationList()) {
+                if (vegetation instanceof Tree || vegetation instanceof Bush) {
+                    int vegX = vegetation.getCurrentX();
+                    int vegY = vegetation.getCurrentY();
+                    if (vegX >= viewportX && vegX < viewportX + viewportWidth &&
+                        vegY >= viewportY && vegY < viewportY + viewportHeight) {
+                        BufferedImage image = terrainImages.get(vegetation.getClass());
+                        if (image != null) {
+                            g.drawImage(image, (vegX - viewportX) * textureResolution,
+                                      (vegY - viewportY) * textureResolution,
+                                      textureResolution, textureResolution, null);
+                        }
+                    }
+                }
             }
         }
     }
