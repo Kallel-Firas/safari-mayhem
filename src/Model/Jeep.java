@@ -63,10 +63,23 @@ public class Jeep extends Entity {
         this.rentalPrice = rentalPrice;
     }
 
+    public void setCurrentRoute(List<int[]> route) {
+        this.currentRoute = route;
+    }
+
+    public void setRouteIndex(int index) {
+        this.routeIndex = index;
+    }
+
     public void update(Safari safari) {
         if (!isMoving) {
-            // Find a route if we don't have one
-            findRoute(safari);
+            // Only find a new route if we don't have one or if we're at the end of our current route
+            if (currentRoute == null || routeIndex >= currentRoute.size()) {
+                findRoute(safari);
+                if (currentRoute != null && !currentRoute.isEmpty()) {
+                    isMoving = true;  // Start moving once we have a route
+                }
+            }
             return;
         }
         
@@ -99,13 +112,15 @@ public class Jeep extends Entity {
             
             // Check if we've reached the end of the route
             if (routeIndex >= currentRoute.size()) {
-                // Reached the exit, find a new route from some entrance
+                // Reached the end, find a new route
                 isMoving = false;
                 currentRoute = null;
                 routeIndex = 0;
+                findRoute(safari);  // Immediately try to find a new route
             }
         } else {
             isMoving = false;
+            findRoute(safari);  // Try to find a new route if we don't have one
         }
     }
     

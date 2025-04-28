@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 
 public class GameScreen extends JFrame {
     GameMap gameMap;
@@ -21,6 +23,7 @@ public class GameScreen extends JFrame {
     Safari safari = new Safari(1, 1, "1/1/2021");
     private JLabel balanceLabel;
     private JLabel timeLabel;
+    private JLabel touristLabel;
     private JButton shopButton;
     private JDialog shopDialog;
     private JLayeredPane layeredPane;
@@ -137,10 +140,17 @@ public class GameScreen extends JFrame {
         timeLabel.setForeground(Color.WHITE);
         layeredPane.add(timeLabel, JLayeredPane.POPUP_LAYER);
 
+        // Add tourist count display
+        touristLabel = new JLabel("Tourists: 0", SwingConstants.LEFT);
+        touristLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        touristLabel.setBounds(450, 80, 150, 20);
+        touristLabel.setForeground(Color.WHITE);
+        layeredPane.add(touristLabel, JLayeredPane.POPUP_LAYER);
+
         // Add shop button
         shopButton = new JButton("Shop");
         shopButton.setFont(new Font("Arial", Font.BOLD, 14));
-        shopButton.setBounds(450, 80, 120, 30);
+        shopButton.setBounds(450, 110, 120, 30);
         layeredPane.add(shopButton, JLayeredPane.POPUP_LAYER);
 
         // Create shop dialog
@@ -204,9 +214,10 @@ public class GameScreen extends JFrame {
 
         // Handle jeep placement
         if (selectedItemType.equals("jeep")) {
-            if (isWater) {
+            // Check if the clicked position is a road
+            if (!(safari.getLandscapes().get(x).get(y) instanceof Road)) {
                 refundPurchase();
-                showPlacementError("Cannot place jeep on water!");
+                showPlacementError("Jeeps can only be placed on roads!");
                 return;
             }
 
@@ -221,12 +232,27 @@ public class GameScreen extends JFrame {
                 return;
             }
 
+            // Check if the road network is complete
+            if (!safari.isRoadNetworkComplete()) {
+                refundPurchase();
+                showPlacementError("Cannot place jeep! The road network must be complete (connected entrance to exit).");
+                return;
+            }
+
             // Create and add the jeep
             Jeep jeep = new Jeep(4, 500); // 4 capacity, 500 rental price
             jeep.setCurrentX(x);
             jeep.setCurrentY(y);
+            
+            // Set the initial route to stay on the current road
+            List<int[]> initialRoute = new ArrayList<>();
+            initialRoute.add(new int[]{x, y});
+            jeep.setCurrentRoute(initialRoute);
+            jeep.setRouteIndex(0);
+            jeep.setMoving(true);  // Set moving to true so the jeep will start moving
+            
             safari.addJeep(jeep);
-            System.out.println("Jeep placed successfully");
+            System.out.println("Jeep placed successfully on road at (" + x + ", " + y + ")");
 
             selectedItem = null;
             selectedItemType = null;
@@ -694,7 +720,7 @@ public class GameScreen extends JFrame {
             hour = 0;
             day++;
             // Add daily capital at the start of each new day
-            balance += 500;
+            balance += 50000;
             balanceLabel.setText("Balance: $" + balance);
 
             // Pay rangers their daily salary
@@ -703,6 +729,10 @@ public class GameScreen extends JFrame {
                 balanceLabel.setText("Balance: $" + balance);
             }
         }
+
+        // Update tourist count based on number of animals (1 tourist per 15 animals)
+        int touristCount = safari.getAnimalList().size() / 15;
+        touristLabel.setText("Tourists: " + touristCount);
 
         // Update the game map with current hour for day/night cycle
         gameMap.setCurrentHour(hour);
