@@ -330,7 +330,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
                         // Create a radial gradient for the light
                         for (int r = radius; r > 0; r--) {
                             float alpha = (float)(radius - r) / radius;
-                            alpha = alpha * 0.05f; // Reduced maximum brightness to 8%
+                            alpha = alpha * 0.03f; // Reduced maximum brightness to 8%
                             g.setColor(new Color(1f, 1f, 1f, alpha));
                             g.fillOval(centerX - r, centerY - r, r * 2, r * 2);
                         }

@@ -11,6 +11,7 @@ public class Cheetah extends Carnivorous {
         super(id, name, 1, 0.4F / 24, 0.35F / 24, isLeader, 100 * 24, 7);
         this.setCurrentX(currentX);
         this.setCurrentY(currentY);
+        this.setReproductionCooldown(24 * 3);
     }
 
     public boolean Eat(int x, int y) {
@@ -23,11 +24,9 @@ public class Cheetah extends Carnivorous {
     public void Drink() {
     }
 
-    public boolean Reproduce(Animal partner) { // edited the Reporduce method to
-        //to make it that if both animals are above a certain age they can reproduce
-        if (getAge() > 24 * 30 && partner.getAge() > 24 * 30 & isCanReproduce() & partner.isCanReproduce()) {
+    public boolean Reproduce(Animal partner) {
+        if (getAge() > 24 * 9 && partner.getAge() > 24 * 9 && isCanReproduce() && partner.isCanReproduce()) {
             return partner instanceof Cheetah;
-
         }
         return false;
     }

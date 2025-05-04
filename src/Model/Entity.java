@@ -60,7 +60,7 @@ public abstract class Entity {
 //    }
     private Timer currentAnimation;
     private final int TILE_SIZE = 32;
-    private final double ANIMATION_SPEED = TILE_SIZE / (1000.0/60.0);
+    private final double ANIMATION_SPEED = TILE_SIZE / (1000.0/300.0);
     public void animateMovement(int targetX, int targetY) {
         // Stop any existing animation
         if (currentAnimation != null && currentAnimation.isRunning()) {
@@ -68,7 +68,7 @@ public abstract class Entity {
         }
 
         // Create new animation timer
-        currentAnimation = new Timer(1000/60, e -> {
+        currentAnimation = new Timer(1000/300, e -> {
             // Calculate distance to target
             double dx = targetX*32 - visualX;
             double dy = targetY*32 - visualY;

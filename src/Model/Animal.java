@@ -30,6 +30,8 @@ public abstract class Animal extends Entity {
     private int value;
     private int dangerLevel;
     private String imagePath;
+    private int reproductionCooldown = 0; // Cooldown in hours
+    private int lastReproductionTime = 0; // Time of last reproduction
 
     public int getCurrentX() {
         return currentX;
@@ -227,13 +229,31 @@ public abstract class Animal extends Entity {
     }
 
     public void Drink() {
-        thirst_meter = 0;
+        this.thirst_meter = 0;
     }
 
     public void Update() {
         setAge(getAge() + 1);
         if (age >= lifespan) {
             alive = false;
+        }
+        
+        // Update individual hunger and thirst
+        hunger_meter += (int)(100 * hunger_change);
+        thirst_meter += (int)(100 * thirst_change);
+        
+        // Check if animal has died from thirst or hunger
+        if (hunger_meter >= 100 || thirst_meter >= 100) {
+            alive = false;
+        }
+        
+        // Check if reproduction cooldown has expired
+        if (!canReproduce) {
+            int hoursSinceLastReproduction = age - lastReproductionTime;
+            if (hoursSinceLastReproduction >= reproductionCooldown) {
+                setCanReproduce(true);
+                System.out.println(name + " can now reproduce again after " + hoursSinceLastReproduction + " hours");
+            }
         }
     }
 
@@ -291,5 +311,52 @@ public abstract class Animal extends Entity {
 
     public String getImagePath() {
         return imagePath;
+    }
+
+    // Add method to create offspring
+    public Animal createOffspring(int id, String name, int x, int y) {
+        if (this instanceof Sheep) {
+            return new Sheep(id, name, false, x, y);
+        } else if (this instanceof Lion) {
+            return new Lion(id, name, false, x, y);
+        } else if (this instanceof Cheetah) {
+            return new Cheetah(id, name, false, x, y);
+        } else if (this instanceof Elephant) {
+            return new Elephant(id, name, false, x, y);
+        }
+        return null;
+    }
+
+    public void setReproductionCooldown(int hours) {
+        this.reproductionCooldown = hours;
+    }
+
+    public int getReproductionCooldown() {
+        return reproductionCooldown;
+    }
+
+    public void setLastReproductionTime(int time) {
+        this.lastReproductionTime = time;
+    }
+
+    public int getLastReproductionTime() {
+        return lastReproductionTime;
+    }
+
+    public int getLifespan() {
+        return lifespan;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean Reproduce(Animal partner) {
+        // Base reproduction logic - can be overridden by subclasses
+        return false;
+    }
+
+    public boolean isAlive() {
+        return alive;
     }
 }
