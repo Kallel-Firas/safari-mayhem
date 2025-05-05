@@ -140,19 +140,23 @@ public class Herd<T extends Animal> {
             hungry = true;
         }
 
-        // Handle death from thirst or hunger
-        Iterator<T> iterator = animalList.iterator();
-        while (iterator.hasNext()) {
-            T animal = iterator.next();
-            // Check if animal has died from thirst or hunger
+        // Create lists to track changes
+        List<T> animalsToRemove = new ArrayList<>();
+        List<T> newOffspring = new ArrayList<>();
+
+        // Check for deaths first
+        for (T animal : animalList) {
             if (!animal.isAlive() || thirstMeter <= 0 || hungerMeter <= 0) {
-                // Remove from map
-                safari.removeEntityAt(animal.getCurrentX(), animal.getCurrentY(), Animal.class);
-                // Remove from animal list
-                iterator.remove();
+                animalsToRemove.add(animal);
                 System.out.println(animal.getName() + " has died from " + 
                     (!animal.isAlive() ? "old age" : (thirstMeter <= 0 ? "thirst" : "hunger")));
             }
+        }
+
+        // Remove dead animals
+        for (T animal : animalsToRemove) {
+            safari.removeEntityAt(animal.getCurrentX(), animal.getCurrentY(), Animal.class);
+            animalList.remove(animal);
         }
 
         // Reset meters if all animals died
@@ -164,28 +168,26 @@ public class Herd<T extends Animal> {
 
         // Check for reproduction opportunities
         if (animalList.size() >= 2) {
-            // Try to find a pair of animals that can reproduce
-            for (int i = 0; i < animalList.size(); i++) {
-                T animal1 = animalList.get(i);
+            List<T> animalListCopy = new ArrayList<>(animalList);
+            
+            for (int i = 0; i < animalListCopy.size(); i++) {
+                T animal1 = animalListCopy.get(i);
                 if (!animal1.isCanReproduce()) continue;
 
-                for (int j = i + 1; j < animalList.size(); j++) {
-                    T animal2 = animalList.get(j);
+                for (int j = i + 1; j < animalListCopy.size(); j++) {
+                    T animal2 = animalListCopy.get(j);
                     if (!animal2.isCanReproduce()) continue;
 
-                    // Check if animals are close enough to reproduce (within 1 tile)
+                    // Reproduction logic (same as before)
                     int dx = Math.abs(animal1.getCurrentX() - animal2.getCurrentX());
                     int dy = Math.abs(animal1.getCurrentY() - animal2.getCurrentY());
                     if (dx <= 1 && dy <= 1) {
-                        // Try to reproduce
                         boolean canReproduce = ((Animal)animal1).Reproduce((Animal)animal2) || 
                                              ((Animal)animal2).Reproduce((Animal)animal1);
                         
                         if (canReproduce) {
-                            // Find a valid position for the offspring
                             int[] offspringPos = findValidOffspringPosition(animal1.getCurrentX(), animal1.getCurrentY());
                             if (offspringPos != null) {
-                                // Create and add the offspring
                                 String speciesName = animal1.getClass().getSimpleName();
                                 String offspringName = speciesName + "Baby" + safari.getNextAnimalId();
                                 Animal offspring = animal1.createOffspring(
@@ -195,14 +197,12 @@ public class Herd<T extends Animal> {
                                     offspringPos[1]
                                 );
                                 if (offspring != null) {
-                                    addAnimal((T) offspring);
+                                    newOffspring.add((T) offspring);
                                     safari.addAnimal(offspring);
-                                    // Set reproduction cooldown for both parents
                                     animal1.setCanReproduce(false);
                                     animal1.setLastReproductionTime(animal1.getAge());
                                     animal2.setCanReproduce(false);
                                     animal2.setLastReproductionTime(animal2.getAge());
-                                    // Display reproduction message in chat
                                     System.out.println("Reproduction successful! A new " + speciesName + " named " + 
                                         offspringName + " was born at position (" + offspringPos[0] + ", " + 
                                         offspringPos[1] + ")");
@@ -214,19 +214,23 @@ public class Herd<T extends Animal> {
             }
         }
 
-        // Update each animal and check for death
-        iterator = animalList.iterator();
-        while (iterator.hasNext()) {
-            T animal = iterator.next();
+        // Add new offspring
+        animalList.addAll(newOffspring);
+
+        // Update animals and check for old age deaths
+        animalsToRemove.clear();
+        for (T animal : animalList) {
             animal.Update();
-            
-            // Check if animal has died of old age
             if (animal.getAge() >= animal.getLifespan()) {
-                // Remove from map and animal list
-                safari.removeEntityAt(animal.getCurrentX(), animal.getCurrentY(), Animal.class);
-                iterator.remove();
+                animalsToRemove.add(animal);
                 System.out.println("Animal " + animal.getName() + " has died of old age.");
             }
+        }
+
+        // Remove animals that died of old age
+        for (T animal : animalsToRemove) {
+            safari.removeEntityAt(animal.getCurrentX(), animal.getCurrentY(), Animal.class);
+            animalList.remove(animal);
         }
 
         // Always check for resources in vision radius first if thirsty or hungry
