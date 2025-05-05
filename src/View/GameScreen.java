@@ -20,21 +20,24 @@ import java.util.ArrayList;
 public class GameScreen extends JFrame {
     GameMap gameMap;
     MiniMap miniMap;
-    Safari safari = new Safari(1, 1, "1/1/2021");
+    Safari safari;
     private JLabel balanceLabel;
     private JLabel timeLabel;
     private JLabel touristLabel;
     private JButton shopButton;
+    private JButton saveButton;
     private JDialog shopDialog;
     private JLayeredPane layeredPane;
     private int balance = 1000; // Starting balance
     private String selectedItem = null;
     private String selectedItemType = null;
-    private Timer gameLogicTimer;
-    private Timer renderTimer;
+
+    private Timer timer1;
+    private Timer timer2;
     private Map<Class<? extends Animal>, BufferedImage> animalImages = new HashMap<>();
 
-    public GameScreen() {
+    public GameScreen(String gameName) {
+        safari = new Safari(1, 1, gameName);
         setTitle("Safari Mayhem");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -159,13 +162,24 @@ public class GameScreen extends JFrame {
         // Add shop button action listener
         shopButton.addActionListener(e -> shopDialog.setVisible(true));
 
-        // Initialize game logic timer for normal time progression
-        gameLogicTimer = new Timer(1000, e -> updateGameState());
-        gameLogicTimer.start();
-
-        // Initialize render timer for smoother animations
-        renderTimer = new Timer(1000 / 60, e -> repaint());
-        renderTimer.start();
+        // Add shop button
+        saveButton = new JButton("Save+Exit");
+        saveButton.setFont(new Font("Arial", Font.BOLD, 14));
+        saveButton.setBounds(450, 150, 120, 30);
+        layeredPane.add(saveButton, JLayeredPane.POPUP_LAYER);
+        saveButton.addActionListener(e -> {
+            // Save game logic here
+            // For example, you can call a method to save the game state
+            timer1.stop();
+            timer2.stop();
+            JOptionPane.showMessageDialog(this, "Game saved successfully!");
+            // Exit the game to the main menu
+            this.dispose();
+            WelcomeScreen welcomeScreen = new WelcomeScreen();
+            welcomeScreen.setLocationRelativeTo(null);
+            welcomeScreen.setVisible(true);
+            SaveAndExit.save(safari);
+        });
 
 //        add(layeredPane, BorderLayout.CENTER);
         pack();
@@ -658,16 +672,19 @@ public class GameScreen extends JFrame {
     }
 
     public void run() {
-        Timer timer1 = new Timer(1000, e -> {
+        timer1 = new Timer(1000, e -> {
             // put game updates here
             safari.Update();
             gameMap.update(safari.getLandscapes(), safari.getEntities());
             miniMap.update(safari.getLandscapes(), safari.getAnimalList());
             updateTime();
+            updateGameState();
         });
-        Timer timer2 = new Timer(1000/60, e -> {
+        timer2 = new Timer(1000/60, e -> {
             // put render updates here
             gameMap.repaint();
+            repaint();
+            miniMap.repaint();
         });
         timer1.start();
         timer2.start();

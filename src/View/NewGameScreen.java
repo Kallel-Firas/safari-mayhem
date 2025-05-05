@@ -5,7 +5,6 @@ import java.awt.*;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
-import javax.swing.Timer;
 
 public class NewGameScreen extends JFrame {
     private Image backgroundImage;
@@ -86,7 +85,7 @@ public class NewGameScreen extends JFrame {
         });
 
         startGameButton.addActionListener(e -> {
-            GameScreen gameScreen = new GameScreen();
+            GameScreen gameScreen = new GameScreen(gameNameField.getText());
             gameScreen.setLocationRelativeTo(null);
             gameScreen.setVisible(true);
             this.dispose();

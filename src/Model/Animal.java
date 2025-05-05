@@ -4,21 +4,17 @@ import java.util.List;
 
 public abstract class Animal extends Entity {
     private String name;
-    private int id;
     private int age;
     private float hunger_change;
     private float thirst_change;
-    private boolean isLeader = false;
     private boolean canReproduce = true;
     private int hunger_meter;
     private int thirst_meter;
     private int lifespan;
-    private int groupSize;
     private int visionRadius;
     private List<int[]> water_locations;
     private List<int[]> food_locations;
     private boolean alive = true;
-    private int currentX, currentY;
     private boolean isVisible;
     private boolean hasLocationChip;
     private int lastSeenX;
@@ -41,9 +37,9 @@ public abstract class Animal extends Entity {
         return currentY;
     }
 
-    public void setCurrentX(int currentX) {
-        this.currentX = currentX;
-    }
+//    public void setCurrentX(int currentX) {
+//        this.currentX = currentX;
+//    }
 
     public boolean isCanReproduce() {
         return canReproduce;
@@ -54,12 +50,11 @@ public abstract class Animal extends Entity {
     }
 
     public Animal(int id, String name, int age, float hunger_change, float thirst_change, boolean isLeader, int lifespan, int visionRadius) {
-        this.id = id;
+        super();
         this.name = name;
         this.age = age;
         this.hunger_change = hunger_change;
         this.thirst_change = thirst_change;
-        this.isLeader = isLeader;
         this.lifespan = lifespan;
         this.visionRadius = visionRadius;
     }

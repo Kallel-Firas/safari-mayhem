@@ -4,10 +4,10 @@ package Model;
 import javax.swing.*;
 
 public abstract class Entity {
-    private int currentX;
-    private int currentY;
-    private int visualX;
-    private int visualY;
+    protected int currentX;
+    protected int currentY;
+    protected int visualX;
+    protected int visualY;
 
     public Entity() {
     }
@@ -60,7 +60,7 @@ public abstract class Entity {
 //    }
     private Timer currentAnimation;
     private final int TILE_SIZE = 32;
-    private final double ANIMATION_SPEED = TILE_SIZE / (1000.0/300.0);
+    private final double ANIMATION_SPEED = TILE_SIZE / (1000.0/32.0);
     public void animateMovement(int targetX, int targetY) {
         // Stop any existing animation
         if (currentAnimation != null && currentAnimation.isRunning()) {
@@ -68,7 +68,7 @@ public abstract class Entity {
         }
 
         // Create new animation timer
-        currentAnimation = new Timer(1000/300, e -> {
+        currentAnimation = new Timer(1000/32, e -> {
             // Calculate distance to target
             double dx = targetX*32 - visualX;
             double dy = targetY*32 - visualY;
@@ -79,8 +79,8 @@ public abstract class Entity {
                 double moveX = Math.min(ANIMATION_SPEED, Math.abs(dx)) * Math.signum(dx);
                 double moveY = Math.min(ANIMATION_SPEED, Math.abs(dy)) * Math.signum(dy);
 
-                visualX += moveX;
-                visualY += moveY;
+                visualX += (int) moveX;
+                visualY += (int) moveY;
             } else {
                 // Snap to exact position and stop animation
                 visualX = targetX*32;

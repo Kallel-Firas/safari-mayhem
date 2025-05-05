@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class Safari {
     private List<Herd> herdList = new ArrayList<>();
-    //private int difficultyLevel;   //all of these attributes are in the game section
+    private final int difficultyLevel;   //all of these attributes are in the game section
     //private int speedMode;
     //private String startingDate;
     private List<Jeep> jeeps = new ArrayList<>();
@@ -23,13 +23,15 @@ public class Safari {
     private List<Animal> animals = new ArrayList<>();
     private List<Entity> entities = new ArrayList<>();
     private boolean lastRoadNetworkComplete = false;
+    private String gameName;
 
     public List<List<Landscape>> getLandscapes() {// added this getter
         return landscapes;
     }
 
-    public Safari(int difficultyLevel, int speedMode, String startingDate) {
-        //this.difficultyLevel = difficultyLevel;
+    public Safari(int difficultyLevel, int speedMode, String gameName) {
+        this.gameName = gameName;
+        this.difficultyLevel = difficultyLevel;
         //this.speedMode = speedMode;
         //this.startingDate = startingDate;
         // Fields are already initialized with the declarations
@@ -340,4 +342,11 @@ public class Safari {
         this.lastRoadNetworkComplete = complete;
     }
 
+    public String getGameName() {
+        return gameName;
+    }
+
+    public String getDifficultyLevel() {
+        return Integer.toString(difficultyLevel);
+    }
 }

@@ -68,6 +68,12 @@ public class WelcomeScreen extends JFrame {
             newGameScreen.setVisible(true);
             this.dispose();
         });
+        loadGameButton.addActionListener(e -> {
+            LoadGameScreen loadGameScreen = new LoadGameScreen();
+            loadGameScreen.setLocationRelativeTo(null);
+            loadGameScreen.setVisible(true);
+            this.dispose();
+        });
 
         backgroundPanel.add(buttonPanel);
 

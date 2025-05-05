@@ -347,7 +347,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
                         if (image != null) {
                             g.drawImage(image, (x - viewportX) * textureResolution,
                                       (y - viewportY) * textureResolution,
-                                      textureResolution, textureResolution, null);
+                                       null);
                         }
                     }
                 }
@@ -364,7 +364,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
                         if (image != null) {
                             g.drawImage(image, (vegX - viewportX) * textureResolution,
                                       (vegY - viewportY) * textureResolution,
-                                      textureResolution, textureResolution, null);
+                                      null);
                         }
                     }
                 }
