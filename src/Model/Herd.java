@@ -1,11 +1,12 @@
 package Model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-public class Herd<T extends Animal> {
+public class Herd<T extends Animal> implements Serializable {
     private final Random Random = new Random();
     private List<T> animalList;
     private boolean isSleeping = false;

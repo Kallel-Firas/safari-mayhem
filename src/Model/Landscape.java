@@ -1,6 +1,8 @@
 package Model;
 
-public abstract class Landscape {
+import java.io.Serializable;
+
+public abstract class Landscape implements Serializable {
     private int x;
     private int y;
 

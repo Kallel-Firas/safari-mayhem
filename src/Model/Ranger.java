@@ -5,14 +5,13 @@ import java.util.Optional;
 import java.util.Random;
 
 public class Ranger extends Entity {
-    private int salary;
     private static final int DETECTION_RADIUS = 5; // Rangers can detect poachers within 5 tiles
     private static final int ELIMINATION_RADIUS = 1; // Rangers can eliminate poachers within 1 tile
     private static final int PATROL_RADIUS = 15; // Rangers patrol within this radius
     private static final int MAX_TIME_PRESENT = 10; // Rangers can stay for 10 hours
     private static final int BLOCKS_PER_DIRECTION = 3; // Number of blocks to move in one direction
-    private float moveSpeed = 0.5f; // Normal speed
-    private float chaseSpeed = 1.0f; // Speed when chasing poachers
+    private final float moveSpeed = 0.5f; // Normal speed
+    private final float chaseSpeed = 1.0f; // Speed when chasing poachers
     private float targetX;
     private float targetY;
     private boolean hasRepelledPoacher = false;
@@ -21,6 +20,7 @@ public class Ranger extends Entity {
     private int timePresent = 0;
     private int blocksMovedInDirection = 0;
     private Direction currentDirection = Direction.NORTH;
+    private int salary;
 
     private enum Direction {
         NORTH, SOUTH, EAST, WEST

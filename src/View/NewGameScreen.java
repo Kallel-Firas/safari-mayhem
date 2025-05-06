@@ -85,7 +85,18 @@ public class NewGameScreen extends JFrame {
         });
 
         startGameButton.addActionListener(e -> {
-            GameScreen gameScreen = new GameScreen(gameNameField.getText());
+            String gameName = gameNameField.getText();
+            if (gameName.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter a game name.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            // if the game name exists (chech if there is a file in saves with the same name) then show a message
+            File file = new File("./saves/" + gameName + ".save");
+            if (file.exists()) {
+                JOptionPane.showMessageDialog(this, "Game name already exists. Please choose a different name.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            GameScreen gameScreen = new GameScreen(gameNameField.getText(), null, false);
             gameScreen.setLocationRelativeTo(null);
             gameScreen.setVisible(true);
             this.dispose();

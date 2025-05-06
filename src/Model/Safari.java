@@ -1,6 +1,7 @@
 package Model;
 
 import java.awt.Point;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -8,20 +9,15 @@ import java.util.LinkedList;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Safari {
+public class Safari implements Serializable {
     private List<Herd> herdList = new ArrayList<>();
     private final int difficultyLevel;   //all of these attributes are in the game section
-    //private int speedMode;
-    //private String startingDate;
     private List<Jeep> jeeps = new ArrayList<>();
     private List<Poacher> poachers = new ArrayList<>();
     private List<Ranger> rangers = new ArrayList<>();
-    private List<int[]> blockList = new ArrayList<>();
     private List<Vegetation> vegetationList = new ArrayList<>();
     private List<List<Landscape>> landscapes = new ArrayList<>();
     private int nextAnimalId = 1;
-    private List<Animal> animals = new ArrayList<>();
-    private List<Entity> entities = new ArrayList<>();
     private boolean lastRoadNetworkComplete = false;
     private String gameName;
 
@@ -121,37 +117,6 @@ public class Safari {
         entities.addAll(jeeps);
         return entities;
     }
-
-
-    public void UpdateSafari() {
-
-    }
-
-    public void setRangerList(List<Ranger> rangers) {
-        this.rangers = rangers;
-    }
-
-    public void setPoacherList(List<Poacher> poachers) {
-        this.poachers = poachers;
-    }
-
-    public void setJeepList(List<Jeep> jeeps) {
-        this.jeeps = jeeps;
-    }
-
-    /*
-    public int getSpeedMode() { return speedMode;}
-
-    public void setSpeedMode(int speedMode) { this.speedMode = speedMode;}
-
-    public String getDate() { return startingDate; }
-
-    public void setDate(String date) { this.startingDate = date;}
-
-    public void FastForward(String action) { System.out.println("Fast forwarding: " + action);}
-     */
-
-
 
     public void Update() {
         List<Herd> deadHerds = new ArrayList<>();
@@ -342,11 +307,17 @@ public class Safari {
         this.lastRoadNetworkComplete = complete;
     }
 
-    public String getGameName() {
-        return gameName;
-    }
 
-    public String getDifficultyLevel() {
-        return Integer.toString(difficultyLevel);
+    public void saveGame() {
+        File saveDir = new File("saves");
+        if (!saveDir.exists()) {
+            saveDir.mkdir();
+        }
+        try (ObjectOutputStream out = new ObjectOutputStream(
+                new FileOutputStream("saves/" + gameName + ".save"))) {
+            out.writeObject(this);
+        } catch (IOException e) {
+            System.err.println("Error saving game: " + e.getMessage());
+        }
     }
 }

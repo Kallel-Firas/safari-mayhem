@@ -36,8 +36,12 @@ public class GameScreen extends JFrame {
     private Timer timer2;
     private Map<Class<? extends Animal>, BufferedImage> animalImages = new HashMap<>();
 
-    public GameScreen(String gameName) {
-        safari = new Safari(1, 1, gameName);
+    public GameScreen(String gameName, Safari s,boolean fromLoadGame) {
+        if (fromLoadGame) {
+            this.safari = s;
+        } else {
+            safari = new Safari(1, 1, gameName);
+        }
         setTitle("Safari Mayhem");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -172,13 +176,13 @@ public class GameScreen extends JFrame {
             // For example, you can call a method to save the game state
             timer1.stop();
             timer2.stop();
+            safari.saveGame();
             JOptionPane.showMessageDialog(this, "Game saved successfully!");
             // Exit the game to the main menu
             this.dispose();
             WelcomeScreen welcomeScreen = new WelcomeScreen();
             welcomeScreen.setLocationRelativeTo(null);
             welcomeScreen.setVisible(true);
-            SaveAndExit.save(safari);
         });
 
 //        add(layeredPane, BorderLayout.CENTER);
