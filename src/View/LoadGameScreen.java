@@ -88,6 +88,10 @@ public class LoadGameScreen extends JFrame {
     private String[] getSavedGames() {
         // look for all files in the current directory that end with .save
         ArrayList<String> savedGames = new ArrayList<>();
+        // if the directory does not exist, return an empty array
+        if (!Files.exists(Paths.get("./saves"))) {
+            return new String[0];
+        }
         try {
             Files.list(Paths.get("./saves"))
                     .filter(path -> path.toString().endsWith(".save"))
