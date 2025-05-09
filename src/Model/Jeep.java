@@ -54,7 +54,7 @@ public class Jeep extends Entity {
     public void setMoving(boolean moving) {
         isMoving = moving;
     }
-    
+
     public String getCurrentImageKey() {
         return currentImageKey;
     }
@@ -83,34 +83,34 @@ public class Jeep extends Entity {
             }
             return;
         }
-        
+
         // Only move every few update cycles (to slow down movement)
         moveDelay++;
         if (moveDelay < moveDelayMax) {
             return;
         }
         moveDelay = 0;
-        
+
         // Move along the route
         if (currentRoute != null && routeIndex < currentRoute.size()) {
             int[] nextPosition = currentRoute.get(routeIndex);
-            
+
             // Calculate direction of movement
             int dirX = nextPosition[0] - getCurrentX();
             int dirY = nextPosition[1] - getCurrentY();
-            
+
             // Update jeep image based on direction
             updateJeepImage(dirX, dirY);
-            
+
             // Use animate movement instead of direct position setting
             animateMovement(nextPosition[0], nextPosition[1]);
-            
+
             // Update the logical position (animateMovement handles visual position)
             MoveX(nextPosition[0]);
             MoveY(nextPosition[1]);
-            
+
             routeIndex++;
-            
+
             // Check if we've reached the end of the route
             if (routeIndex >= currentRoute.size()) {
                 // Reached the end, find a new route
@@ -124,7 +124,7 @@ public class Jeep extends Entity {
             findRoute(safari);  // Try to find a new route if we don't have one
         }
     }
-    
+
     private void updateJeepImage(int dirX, int dirY) {
         // Moving right
         if (dirX > 0 && dirY == 0) {
@@ -156,7 +156,7 @@ public class Jeep extends Entity {
         // Find all entrance roads
         List<Road> entrances = new ArrayList<>();
         List<Road> exits = new ArrayList<>();
-        
+
         // Find all entrance and exit roads
         for (List<Landscape> row : safari.getLandscapes()) {
             for (Landscape tile : row) {
@@ -171,29 +171,29 @@ public class Jeep extends Entity {
                 }
             }
         }
-        
+
         // If no entrances or exits, can't create a route
         if (entrances.isEmpty() || exits.isEmpty()) {
             return;
         }
-        
+
         // Pick a random entrance and exit
         Random random = new Random();
         Road start = entrances.get(random.nextInt(entrances.size()));
         Road end = exits.get(random.nextInt(exits.size()));
-        
+
         // Find a path between them
-        currentRoute = findShortestPath(safari.getLandscapes(), 
-                                        new int[]{start.getCurrentX(), start.getCurrentY()},
-                                        new int[]{end.getCurrentX(), end.getCurrentY()});
-        
+        currentRoute = findShortestPath(safari.getLandscapes(),
+                new int[]{start.getCurrentX(), start.getCurrentY()},
+                new int[]{end.getCurrentX(), end.getCurrentY()});
+
         if (currentRoute != null && !currentRoute.isEmpty()) {
             // Set the jeep position to the starting point
             setCurrentX(currentRoute.get(0)[0]);
             setCurrentY(currentRoute.get(0)[1]);
             routeIndex = 1;  // Start moving from the second point
             isMoving = true;
-            
+
             // Set initial direction based on next point
             if (currentRoute.size() > 1) {
                 int[] nextPoint = currentRoute.get(1);
@@ -203,47 +203,47 @@ public class Jeep extends Entity {
             }
         }
     }
-    
+
     private List<int[]> findShortestPath(List<List<Landscape>> matrix, int[] start, int[] end) {
         int n = matrix.size();
         int m = matrix.get(0).size();
         boolean[][] visited = new boolean[n][m];
         Map<String, int[]> parentMap = new HashMap<>();
-        
+
         Queue<int[]> queue = new LinkedList<>();
         queue.add(start);
         visited[start[0]][start[1]] = true;
-        
+
         // Directions: up, down, left, right
         int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-        
+
         boolean found = false;
         while (!queue.isEmpty() && !found) {
             int[] current = queue.poll();
             int row = current[0], col = current[1];
-            
+
             if (row == end[0] && col == end[1]) {
                 found = true;
                 break;
             }
-            
+
             for (int[] dir : directions) {
                 int newRow = row + dir[0];
                 int newCol = col + dir[1];
-                
-                if (newRow >= 0 && newRow < n && newCol >= 0 && newCol < m && 
-                    !visited[newRow][newCol] && matrix.get(newRow).get(newCol) instanceof Road) {
+
+                if (newRow >= 0 && newRow < n && newCol >= 0 && newCol < m &&
+                        !visited[newRow][newCol] && matrix.get(newRow).get(newCol) instanceof Road) {
                     queue.add(new int[]{newRow, newCol});
                     visited[newRow][newCol] = true;
                     parentMap.put(newRow + "," + newCol, new int[]{row, col});
                 }
             }
         }
-        
+
         if (!found) {
             return null;
         }
-        
+
         // Reconstruct the path
         List<int[]> path = new ArrayList<>();
         int[] current = end;
@@ -255,7 +255,7 @@ public class Jeep extends Entity {
         }
         path.add(start);
         Collections.reverse(path);
-        
+
         return path;
     }
 }
