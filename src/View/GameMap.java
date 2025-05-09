@@ -157,8 +157,8 @@ public class GameMap extends JPanel implements MouseWheelListener {
                     image = terrainImages.get(Dirt.class);
                     if (image != null) {
                         g.drawImage(image, (x - viewportX) * textureResolution,
-                                  (y - viewportY) * textureResolution,
-                                  textureResolution, textureResolution, null);
+                                (y - viewportY) * textureResolution,
+                                textureResolution, textureResolution, null);
                     }
 
                     // Then draw the road image on top
@@ -173,20 +173,20 @@ public class GameMap extends JPanel implements MouseWheelListener {
 
                 if (image != null) {
                     g.drawImage(image, (x - viewportX) * textureResolution,
-                              (y - viewportY) * textureResolution,
-                              textureResolution, textureResolution, null);
+                            (y - viewportY) * textureResolution,
+                            textureResolution, textureResolution, null);
                 }
 
                 // Draw white boxes at road start points
                 if (roadStartPoints.contains(new Point(x, y))) {
                     g.setColor(new Color(255, 255, 255, 128)); // Semi-transparent white
                     g.fillRect((x - viewportX) * textureResolution,
-                             (y - viewportY) * textureResolution,
-                             textureResolution, textureResolution);
+                            (y - viewportY) * textureResolution,
+                            textureResolution, textureResolution);
                     g.setColor(Color.BLACK);
                     g.drawRect((x - viewportX) * textureResolution,
-                             (y - viewportY) * textureResolution,
-                             textureResolution, textureResolution);
+                            (y - viewportY) * textureResolution,
+                            textureResolution, textureResolution);
                 }
             }
         }
@@ -200,7 +200,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
                 int jeepY = jeep.getCurrentY();
 
                 if (jeepX >= viewportX && jeepX < viewportX + viewportWidth &&
-                    jeepY >= viewportY && jeepY < viewportY + viewportHeight) {
+                        jeepY >= viewportY && jeepY < viewportY + viewportHeight) {
                     // Get the appropriate jeep image based on direction
                     BufferedImage jeepImage = jeepImages.get(jeep.getCurrentImageKey());
                     if (jeepImage != null) {
@@ -220,20 +220,20 @@ public class GameMap extends JPanel implements MouseWheelListener {
                 BufferedImage image = entityImages.get(entity.getClass());
                 int entityX = entity.getCurrentX();
                 int entityY = entity.getCurrentY();
-                
+
                 // Check if entity is in viewport
                 if (entityX >= viewportX && entityX < viewportX + viewportWidth &&
-                    entityY >= viewportY && entityY < viewportY + viewportHeight) {
-                    
+                        entityY >= viewportY && entityY < viewportY + viewportHeight) {
+
                     // During nighttime, check visibility for animals
                     if (isNightTime() && entity instanceof Animal) {
                         boolean isVisible = false;
-                        
+
                         // Check if animal has a location chip
                         if (((Animal)entity).hasLocationChip()) {
                             isVisible = true;
                         }
-                        
+
                         // Check proximity to rangers
                         if (!isVisible) {
                             for (Ranger ranger : safari.getRangers()) {
@@ -246,7 +246,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
                                 }
                             }
                         }
-                        
+
                         // Check proximity to jeeps (tourists)
                         if (!isVisible) {
                             for (Jeep jeep : safari.getJeeps()) {
@@ -259,13 +259,13 @@ public class GameMap extends JPanel implements MouseWheelListener {
                                 }
                             }
                         }
-                        
+
                         // If not visible at night, skip drawing
                         if (!isVisible) {
                             continue;
                         }
                     }
-                    
+
                     // Draw the entity
                     g.drawImage(image, entity.getVisualX() - viewportX * textureResolution,
                             entity.getVisualY() - viewportY * textureResolution,
@@ -280,9 +280,9 @@ public class GameMap extends JPanel implements MouseWheelListener {
             int vegX = vegetation.getCurrentX();
             int vegY = vegetation.getCurrentY();
             if (vegX >= viewportX && vegX < viewportX + viewportWidth &&
-                vegY >= viewportY && vegY < viewportY + viewportHeight) {
+                    vegY >= viewportY && vegY < viewportY + viewportHeight) {
                 g.drawImage(image, (vegX - viewportX) * textureResolution,
-                          (vegY - viewportY) * textureResolution, null);
+                        (vegY - viewportY) * textureResolution, null);
             }
         }
 
@@ -296,14 +296,14 @@ public class GameMap extends JPanel implements MouseWheelListener {
             for (int x = viewportX; x < viewportX + viewportWidth && x < terrain.size(); x++) {
                 for (int y = viewportY; y < viewportY + viewportHeight && y < terrain.get(x).size(); y++) {
                     Landscape currentTile = terrain.get(x).get(y);
-                    
+
                     // Check if this tile needs lighting
                     if (currentTile instanceof Road || currentTile instanceof Water) {
                         // Create a radial gradient for the light effect
                         int centerX = (x - viewportX) * textureResolution + textureResolution/2;
                         int centerY = (y - viewportY) * textureResolution + textureResolution/2;
                         int radius = textureResolution * 2; // Light radius is 2 tiles
-                        
+
                         // Create a radial gradient for the light
                         for (int r = radius; r > 0; r--) {
                             float alpha = (float)(radius - r) / radius;
@@ -321,12 +321,12 @@ public class GameMap extends JPanel implements MouseWheelListener {
                     int vegX = vegetation.getCurrentX();
                     int vegY = vegetation.getCurrentY();
                     if (vegX >= viewportX && vegX < viewportX + viewportWidth &&
-                        vegY >= viewportY && vegY < viewportY + viewportHeight) {
+                            vegY >= viewportY && vegY < viewportY + viewportHeight) {
                         // Create a radial gradient for the light effect
                         int centerX = (vegX - viewportX) * textureResolution + textureResolution/2;
                         int centerY = (vegY - viewportY) * textureResolution + textureResolution/2;
                         int radius = textureResolution * 2; // Light radius is 2 tiles
-                        
+
                         // Create a radial gradient for the light
                         for (int r = radius; r > 0; r--) {
                             float alpha = (float)(radius - r) / radius;
@@ -338,16 +338,25 @@ public class GameMap extends JPanel implements MouseWheelListener {
                 }
             }
 
-            // Redraw the lit objects to make them visible
+            // Redraw the lit objects (especially roads) to make them visible
             for (int x = viewportX; x < viewportX + viewportWidth && x < terrain.size(); x++) {
                 for (int y = viewportY; y < viewportY + viewportHeight && y < terrain.get(x).size(); y++) {
-                    Landscape currentTile = terrain.get(x).get(y);
-                    if (currentTile instanceof Road || currentTile instanceof Water) {
-                        BufferedImage image = terrainImages.get(currentTile.getClass());
+                    Landscape tile = terrain.get(x).get(y);
+
+                    if (tile instanceof Road) {
+                        Road road = (Road) tile;
+                        BufferedImage image = roadImages.getOrDefault(road.getImageKey(), roadImages.get("road1"));
                         if (image != null) {
                             g.drawImage(image, (x - viewportX) * textureResolution,
-                                      (y - viewportY) * textureResolution,
-                                       null);
+                                    (y - viewportY) * textureResolution,
+                                    textureResolution, textureResolution, null);
+                        }
+                    } else if (tile instanceof Water) {
+                        BufferedImage image = terrainImages.get(tile.getClass());
+                        if (image != null) {
+                            g.drawImage(image, (x - viewportX) * textureResolution,
+                                    (y - viewportY) * textureResolution,
+                                    null);
                         }
                     }
                 }
@@ -359,17 +368,36 @@ public class GameMap extends JPanel implements MouseWheelListener {
                     int vegX = vegetation.getCurrentX();
                     int vegY = vegetation.getCurrentY();
                     if (vegX >= viewportX && vegX < viewportX + viewportWidth &&
-                        vegY >= viewportY && vegY < viewportY + viewportHeight) {
+                            vegY >= viewportY && vegY < viewportY + viewportHeight) {
                         BufferedImage image = terrainImages.get(vegetation.getClass());
                         if (image != null) {
                             g.drawImage(image, (vegX - viewportX) * textureResolution,
-                                      (vegY - viewportY) * textureResolution,
-                                      null);
+                                    (vegY - viewportY) * textureResolution,
+                                    null);
                         }
                     }
                 }
             }
         }
+        // Redraw jeeps after night overlay (like roads/trees)
+        if (isNightTime()) {
+            for (Jeep jeep : safari.getJeeps()) {
+                int x = jeep.getCurrentX();
+                int y = jeep.getCurrentY();
+
+                if (x >= viewportX && x < viewportX + viewportWidth &&
+                        y >= viewportY && y < viewportY + viewportHeight) {
+
+                    BufferedImage jeepImage = jeepImages.get(jeep.getCurrentImageKey());
+                    if (jeepImage != null) {
+                        int screenX = jeep.getVisualX() - viewportX * textureResolution;
+                        int screenY = jeep.getVisualY() - viewportY * textureResolution;
+                        g.drawImage(jeepImage, screenX, screenY, textureResolution, textureResolution, null);
+                    }
+                }
+            }
+        }
+
     }
 
     public Map<Object, BufferedImage> getTerrainImages() {
@@ -428,4 +456,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
         g2d.dispose();
         jeepImages.put(key, resizedJeep);
     }
+
+
+
 }

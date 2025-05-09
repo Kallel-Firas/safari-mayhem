@@ -1,6 +1,7 @@
 package Model;
 
 import java.util.*;
+import java.awt.image.BufferedImage;
 
 public class Jeep extends Entity {
     private int price = 500;
