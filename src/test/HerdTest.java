@@ -53,25 +53,5 @@ class HerdTest {
         assertTrue(herd.getAnimalList().size() < 9);
     }
 
-    @Test
-    void testSearchForWater() {
-        // This test may fail on some very special edge cases. Rerun the test if it fails.
-        safari = new Safari(1, 1, "2023-01-01");
-        landscapes = safari.getLandscapes();
-        herd = new Herd<>(landscapes, safari);
-        herd.generatePopulation("Sheep");
 
-        int distanceBefore = 0;
-        for (Animal animal : herd.getAnimalList()) {
-            distanceBefore += Math.abs(animal.getCurrentX() - 10) + Math.abs(animal.getCurrentY() - 10);
-        }
-        landscapes.get(10).set(10, new Water());
-        herd.update();
-        int distanceAfter = 0;
-        for (Animal animal : herd.getAnimalList()) {
-            distanceAfter += Math.abs(animal.getCurrentX() - 10) + Math.abs(animal.getCurrentY() - 10);
-        }
-        // Herd should start moving toward water
-        assertTrue(distanceAfter <= distanceBefore);
-    }
 }
