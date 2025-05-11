@@ -28,7 +28,6 @@ public class GameScreen extends JFrame {
     private JButton saveButton;
     private JDialog shopDialog;
     private JLayeredPane layeredPane;
-    private int balance = 1000; // Starting balance
     private String selectedItem = null;
     private String selectedItemType = null;
 
@@ -86,15 +85,12 @@ public class GameScreen extends JFrame {
                             // Remove the road
                             safari.setLandscape(tileX, tileY, new Dirt());
                             // Refund the road cost
-                            balance += 250; // Road cost is 250
-                            balanceLabel.setText("Balance: $" + balance);
-                            // Reset the road network completion status since we removed a road
+                            safari.makePurchase(-250);
                             safari.setLastRoadNetworkComplete(false);
                         } else if (e.getButton() == MouseEvent.BUTTON3) {  // Right click - copy the road
-                            if (balance >= 250) {  // Check if player can afford the road
+                            if (safari.canAffordPurchase(250)) {  // Check if player can afford the road
                                 // Deduct the cost
-                                balance -= 250;
-                                balanceLabel.setText("Balance: $" + balance);
+                                safari.makePurchase(250);
                                 // Set the road type as selected item
                                 selectedItem = roadType;
                                 selectedItemType = "road";
@@ -134,7 +130,7 @@ public class GameScreen extends JFrame {
         layeredPane.add(miniMap, JLayeredPane.PALETTE_LAYER);
 
         // Add balance display
-        balanceLabel = new JLabel("Balance: $" + balance, SwingConstants.LEFT);
+        balanceLabel = new JLabel("Balance: $" + safari.getBalance(), SwingConstants.LEFT);
         balanceLabel.setFont(new Font("Arial", Font.BOLD, 16));
         balanceLabel.setBounds(450, 20, 150, 20);
         balanceLabel.setForeground(Color.WHITE);
@@ -148,7 +144,7 @@ public class GameScreen extends JFrame {
         layeredPane.add(timeLabel, JLayeredPane.POPUP_LAYER);
 
         // Add tourist count display
-        touristLabel = new JLabel("Tourists: 0", SwingConstants.LEFT);
+        touristLabel = new JLabel("Tourists: " + safari.getTouristCount(), SwingConstants.LEFT);
         touristLabel.setFont(new Font("Arial", Font.BOLD, 16));
         touristLabel.setBounds(450, 80, 150, 20);
         touristLabel.setForeground(Color.WHITE);
@@ -232,51 +228,36 @@ public class GameScreen extends JFrame {
 
         // Handle jeep placement
         if (selectedItemType.equals("jeep")) {
-            // Check if the clicked position is a road
-            if (!(safari.getLandscapes().get(x).get(y) instanceof Road)) {
-                refundPurchase();
-                showPlacementError("Jeeps can only be placed on roads!");
-                return;
-            }
-
-            // Check if there are any roads on the map
-            boolean hasRoads = safari.getLandscapes().stream()
-                    .flatMap(row -> row.stream())
-                    .anyMatch(tile -> tile instanceof Road);
-
-            if (!hasRoads) {
-                refundPurchase();
-                showPlacementError("Cannot place jeep! There are no roads on the map.");
-                return;
-            }
-
-            // Check if the road network is complete
             if (!safari.isRoadNetworkComplete()) {
-                refundPurchase();
-                showPlacementError("Cannot place jeep! The road network must be complete (connected entrance to exit).");
+                showPlacementError("Cannot place jeep! The road network must be complete (connected entrance to exit) before purchasing a jeep.");
                 return;
             }
 
-            // Create and add the jeep
-            Jeep jeep = new Jeep(4, 500); // 4 capacity, 500 rental price
-            jeep.setCurrentX(x);
-            jeep.setCurrentY(y);
-            
-            // Set the initial route to stay on the current road
-            List<int[]> initialRoute = new ArrayList<>();
-            initialRoute.add(new int[]{x, y});
-            jeep.setCurrentRoute(initialRoute);
-            jeep.setRouteIndex(0);
-            jeep.setMoving(true);  // Set moving to true so the jeep will start moving
-            
-            safari.addJeep(jeep);
-            System.out.println("Jeep placed successfully on road at (" + x + ", " + y + ")");
-
-            selectedItem = null;
-            selectedItemType = null;
-            setCursor(Cursor.getDefaultCursor());
-            gameMap.repaint();
-            miniMap.repaint();
+            if (safari.canAffordPurchase(2000)) {
+                safari.makePurchase(2000);
+                balanceLabel.setText("Balance: $" + safari.getBalance());
+                
+                // Create and add the jeep
+                Jeep jeep = new Jeep(4, 500);
+                jeep.setCurrentX(x);
+                jeep.setCurrentY(y);
+                
+                List<int[]> initialRoute = new ArrayList<>();
+                initialRoute.add(new int[]{x, y});
+                jeep.setCurrentRoute(initialRoute);
+                jeep.setRouteIndex(0);
+                jeep.setMoving(true);
+                
+                safari.addJeep(jeep);
+                
+                selectedItem = null;
+                selectedItemType = null;
+                setCursor(Cursor.getDefaultCursor());
+                gameMap.repaint();
+                miniMap.repaint();
+            } else {
+                showPlacementError("Not enough money to buy jeep!");
+            }
             return;
         }
 
@@ -309,14 +290,12 @@ public class GameScreen extends JFrame {
                 }
 
                 if (!isAdjacentToRoad) {
-                    refundPurchase();
                     showPlacementError("Roads must be connected to existing roads or start from a white box!");
                     return;
                 }
             }
 
             if (!isDirt) {
-                refundPurchase();
                 showPlacementError("Roads can only be placed on dirt terrain!");
                 return;
             }
@@ -328,7 +307,6 @@ public class GameScreen extends JFrame {
                 } else if (hasVegetation) {
                     errorMessage += "Position has vegetation (tree/bush).";
                 }
-                refundPurchase();
                 showPlacementError(errorMessage);
                 return;
             }
@@ -385,7 +363,6 @@ public class GameScreen extends JFrame {
                     errorMessage += "Cannot place ranger on water.";
                 }
 
-                refundPurchase();
                 showPlacementError(errorMessage);
                 return;
             }
@@ -483,28 +460,8 @@ public class GameScreen extends JFrame {
         } catch (Exception e) {
             System.out.println("Error placing item: " + e.getMessage());
             e.printStackTrace();
-            refundPurchase();
             showPlacementError("Error placing item: " + e.getMessage());
         }
-    }
-
-    private void refundPurchase() {
-        int refundAmount = 0;
-        switch (selectedItem) {
-            case "Cheetah": refundAmount = 500; break;
-            case "Lion": refundAmount = 600; break;
-            case "Elephant": refundAmount = 800; break;
-            case "Sheep": refundAmount = 200; break;
-            case "Tree": refundAmount = 100; break;
-            case "Bush": refundAmount = 75; break;
-            case "Grass": refundAmount = 50; break;
-            case "Water": refundAmount = 200; break;
-            case "Dirt": refundAmount = 20; break;
-            case "Road": refundAmount = 250; break;
-            case "Location Chip": refundAmount = 300; break;
-        }
-        balance += refundAmount;
-        balanceLabel.setText("Balance: $" + balance);
     }
 
     private void showPlacementError(String message) {
@@ -624,9 +581,8 @@ public class GameScreen extends JFrame {
                     }
                 }
 
-                if (balance >= price) {
-                    balance -= price;
-                    balanceLabel.setText("Balance: $" + balance);
+                if (safari.canAffordPurchase(price)) {
+                    safari.makePurchase(price);
                     selectedItem = name;
                     selectedItemType = type;
                     shopDialog.setVisible(false);
@@ -702,20 +658,13 @@ public class GameScreen extends JFrame {
 
         int day = Integer.parseInt(dayPart[1]);
         int hour = Integer.parseInt(timePart[0]);
-
-//        hour++;
-//        if (hour >= 24) {
-//            hour = 0;
-//            day++;
-//        }
-
         timeLabel.setText(String.format("Day %d, %02d:00", day, hour));
     }
 
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-//        drawAnimals(g);
+
     }
 
     private void drawAnimals(Graphics g) {
@@ -740,20 +689,16 @@ public class GameScreen extends JFrame {
         if (hour >= 24) {
             hour = 0;
             day++;
-            // Add daily capital at the start of each new day
-            balance += 50000;
-            balanceLabel.setText("Balance: $" + balance);
-
-            // Pay rangers their daily salary
-            for (Ranger ranger : safari.getRangers()) {
-                balance -= ranger.getSalary();
-                balanceLabel.setText("Balance: $" + balance);
-            }
+            
+            // Update financial state through Safari
+            safari.addDailyCapital();
+            safari.payRangerSalaries();
+            balanceLabel.setText("Balance: $" + safari.getBalance());
         }
 
-        // Update tourist count based on number of animals (1 tourist per 15 animals)
-        int touristCount = safari.getAnimalList().size() / 15;
-        touristLabel.setText("Tourists: " + touristCount);
+        // Update tourist count through Safari
+        safari.updateTouristCount();
+        touristLabel.setText("Tourists: " + safari.getTouristCount());
 
         // Update the game map with current hour for day/night cycle
         gameMap.setCurrentHour(hour);
@@ -762,8 +707,8 @@ public class GameScreen extends JFrame {
         for (Ranger ranger : safari.getRangers()) {
             ranger.update(safari);
             if (ranger.hasRepelledPoacher()) {
-                balance += 50; // Bonus for repelling poacher
-                balanceLabel.setText("Balance: $" + balance);
+                safari.addPoacherBonus();
+                balanceLabel.setText("Balance: $" + safari.getBalance());
             }
         }
 

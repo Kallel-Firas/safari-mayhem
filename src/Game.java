@@ -107,18 +107,7 @@ public class Game {
 
 
 
-                    // Move and sleep
 
-
-                    // Check if the animal can reproduce
-                    /*
-                    if (animal.getAge() >= ) {
-                        Animal partner = findPartner(animal);
-                        if (partner != null && animal.Reproduce(partner)) {
-                            // Handle reproduction logic
-                        }
-                    }
-                    */
                 }
             }
         }
@@ -140,14 +129,7 @@ public class Game {
 
     public static void main(String[] args) {
         WelcomeScreen welcomeScreen = new WelcomeScreen();
-        /*
-        JFrame frame = new JFrame("Model.Safari Mayhem");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        View view = new View();
-        frame.add(view);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        */
+
     }
 
     // Getters and setters for calendar

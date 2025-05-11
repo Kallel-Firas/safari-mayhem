@@ -20,6 +20,7 @@ public class Safari implements Serializable {
     private int nextAnimalId = 1;
     private boolean lastRoadNetworkComplete = false;
     private String gameName;
+    private Capital capital;
 
     public List<List<Landscape>> getLandscapes() {// added this getter
         return landscapes;
@@ -28,10 +29,8 @@ public class Safari implements Serializable {
     public Safari(int difficultyLevel, int speedMode, String gameName) {
         this.gameName = gameName;
         this.difficultyLevel = difficultyLevel;
-        //this.speedMode = speedMode;
-        //this.startingDate = startingDate;
-        // Fields are already initialized with the declarations
-        // populate landscape
+        this.capital = new Capital();
+
         this.landscapes.clear();
         for (int i = 0; i < 50; i++) {
             List<Landscape> column = new ArrayList<>();
@@ -319,5 +318,40 @@ public class Safari implements Serializable {
         } catch (IOException e) {
             System.err.println("Error saving game: " + e.getMessage());
         }
+    }
+
+    // Add new methods for financial operations
+    public boolean canAffordPurchase(int amount) {
+        return capital.canAfford(amount);
+    }
+
+    public void makePurchase(int amount) {
+        capital.purchaseItem(amount);
+    }
+
+    public void addDailyCapital() {
+        capital.addDailyCapital();
+    }
+
+    public void payRangerSalaries() {
+        for (Ranger ranger : rangers) {
+            capital.payRangerSalary(ranger.getSalary());
+        }
+    }
+
+    public void addPoacherBonus() {
+        capital.addPoacherBonus();
+    }
+
+    public void updateTouristCount() {
+        capital.updateTouristCount(getAnimalList().size());
+    }
+
+    public int getBalance() {
+        return capital.getBalance();
+    }
+
+    public int getTouristCount() {
+        return capital.getTouristCount();
     }
 }
