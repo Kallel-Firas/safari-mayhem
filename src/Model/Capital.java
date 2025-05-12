@@ -1,6 +1,8 @@
 package Model;
 
-public class Capital {
+import java.io.Serializable;
+
+public class Capital implements Serializable {
     private int balance;
     private int dailyRevenue;
     private int touristCount;
