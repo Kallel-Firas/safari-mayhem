@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class NewGameScreen extends JFrame {
+
     private Image backgroundImage;
 
     public NewGameScreen() {

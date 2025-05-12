@@ -17,6 +17,7 @@ import Model.*;
 import javax.imageio.ImageIO;
 
 public class MiniMap extends JPanel {
+
     private List<List<Landscape>> terrain;
     private List<Animal> entities;
     private Map<Object, BufferedImage> terrainImages;

@@ -16,6 +16,7 @@ import org.json.simple.*;
 import org.json.simple.parser.*;
 
 public class LoadGameScreen extends JFrame {
+
     public LoadGameScreen() {
         setTitle("Load Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

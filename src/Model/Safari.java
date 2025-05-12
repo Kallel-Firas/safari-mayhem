@@ -296,6 +296,7 @@ public class Safari implements Serializable {
     public void updateJeeps() {
         for (Jeep jeep : jeeps) {
             jeep.update(this);
+
         }
     }
 

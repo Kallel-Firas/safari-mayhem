@@ -426,6 +426,7 @@ public class GameMap extends JPanel implements MouseWheelListener {
         return viewportY;
     }
 
+
     public void setViewport(int x, int y) {
         viewportX = Math.max(0, Math.min(terrain.size() - viewportWidth, x));
         viewportY = Math.max(0, Math.min(terrain.get(0).size() - viewportHeight, y));

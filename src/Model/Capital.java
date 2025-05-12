@@ -1,6 +1,7 @@
 package Model;
 
 public class Capital {
+
     private int amount;
 
     public void purchaseItem() {

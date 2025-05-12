@@ -793,6 +793,7 @@ public class GameScreen extends JFrame {
         timeLabel.setText(String.format("Day %d, %02d:00", day, hour));
     }
 
+
     private void spawnPoacher() {
         Random random = new Random();
         boolean validPosition = false;

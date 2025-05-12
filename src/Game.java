@@ -23,7 +23,6 @@ public class Game {
         this.difficulty = difficulty;
         this.safari = safari;
     }
-
     private void updateCalendar(int hours, int days) {
         calendar.add(Calendar.HOUR_OF_DAY, hour);
         calendar.add(Calendar.DAY_OF_YEAR, days);

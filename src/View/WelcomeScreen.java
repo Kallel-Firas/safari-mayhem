@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class WelcomeScreen extends JFrame {
+
     private Image backgroundImage;
 
     public WelcomeScreen() {
