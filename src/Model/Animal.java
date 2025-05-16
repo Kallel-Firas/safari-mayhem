@@ -37,9 +37,7 @@ public abstract class Animal extends Entity {
         return currentY;
     }
 
-//    public void setCurrentX(int currentX) {
-//        this.currentX = currentX;
-//    }
+
 
     public boolean isCanReproduce() {
         return canReproduce;
