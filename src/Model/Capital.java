@@ -7,7 +7,7 @@ public class Capital implements Serializable {
     private int dailyRevenue;
     private int touristCount;
     private static final int DAILY_CAPITAL = 50000;
-    private static final int TOURIST_PER_ANIMAL = 15;
+    private static final int TOURIST_PER_ANIMAL = 5;
     private static final int POACHER_BONUS = 50;
 
     public Capital() {

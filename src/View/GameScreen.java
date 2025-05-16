@@ -35,6 +35,12 @@ public class GameScreen extends JFrame {
     private Timer timer2;
     private Map<Class<? extends Animal>, BufferedImage> animalImages = new HashMap<>();
 
+    private JButton speedButton;
+    private JLabel speedLabel;
+    private String[] speedLevels = {"Hour", "Day", "Week"};
+    private int[] speedIntervals = {1000, 300, 100}; // ms per tick for each speed
+    private int currentSpeedIndex = 0;
+
     public GameScreen(String gameName, Safari s,boolean fromLoadGame) {
         if (fromLoadGame) {
             this.safari = s;
@@ -162,23 +168,38 @@ public class GameScreen extends JFrame {
         // Add shop button action listener
         shopButton.addActionListener(e -> shopDialog.setVisible(true));
 
-        // Add shop button
+        // Add save button
         saveButton = new JButton("Save+Exit");
         saveButton.setFont(new Font("Arial", Font.BOLD, 14));
         saveButton.setBounds(450, 150, 120, 30);
         layeredPane.add(saveButton, JLayeredPane.POPUP_LAYER);
         saveButton.addActionListener(e -> {
             // Save game logic here
-            // For example, you can call a method to save the game state
             timer1.stop();
             timer2.stop();
             safari.saveGame();
             JOptionPane.showMessageDialog(this, "Game saved successfully!");
-            // Exit the game to the main menu
             this.dispose();
             WelcomeScreen welcomeScreen = new WelcomeScreen();
             welcomeScreen.setLocationRelativeTo(null);
             welcomeScreen.setVisible(true);
+        });
+
+        // Add speed label
+        speedLabel = new JLabel("Speed: " + speedLevels[currentSpeedIndex], SwingConstants.LEFT);
+        speedLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        speedLabel.setBounds(450, 190, 150, 20);
+        speedLabel.setForeground(Color.WHITE);
+        layeredPane.add(speedLabel, JLayeredPane.POPUP_LAYER);
+
+        // Add speed button
+        speedButton = new JButton("Speed");
+        speedButton.setFont(new Font("Arial", Font.BOLD, 14));
+        speedButton.setBounds(450, 220, 120, 30);
+        layeredPane.add(speedButton, JLayeredPane.POPUP_LAYER);
+        speedButton.addActionListener(e -> {
+            currentSpeedIndex = (currentSpeedIndex + 1) % speedLevels.length;
+            updateSpeed();
         });
 
 //        add(layeredPane, BorderLayout.CENTER);
@@ -632,8 +653,7 @@ public class GameScreen extends JFrame {
     }
 
     public void run() {
-        timer1 = new Timer(1000, e -> {
-            // put game updates here
+        timer1 = new Timer(speedIntervals[currentSpeedIndex], e -> {
             safari.Update();
             gameMap.update(safari.getLandscapes(), safari.getEntities());
             miniMap.update(safari.getLandscapes(), safari.getAnimalList());
@@ -641,7 +661,6 @@ public class GameScreen extends JFrame {
             updateGameState();
         });
         timer2 = new Timer(1000/60, e -> {
-            // put render updates here
             gameMap.repaint();
             repaint();
             miniMap.repaint();
@@ -765,6 +784,13 @@ public class GameScreen extends JFrame {
                 }
             }
             attempts++;
+        }
+    }
+
+    private void updateSpeed() {
+        speedLabel.setText("Speed: " + speedLevels[currentSpeedIndex]);
+        if (timer1 != null) {
+            timer1.setDelay(speedIntervals[currentSpeedIndex]);
         }
     }
 
