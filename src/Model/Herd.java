@@ -147,7 +147,7 @@ public class Herd<T extends Animal> implements Serializable {
 
         // Check for deaths first
         for (T animal : animalList) {
-            if (!animal.isAlive() || thirstMeter <= 0 || hungerMeter <= 0) {
+            if (!animal.isAlive() ) {
                 animalsToRemove.add(animal);
                 System.out.println(animal.getName() + " has died from " + 
                     (!animal.isAlive() ? "old age" : (thirstMeter <= 0 ? "thirst" : "hunger")));
@@ -218,16 +218,16 @@ public class Herd<T extends Animal> implements Serializable {
         // Add new offspring
         animalList.addAll(newOffspring);
 
-        // Update animals and check for old age deaths
-        animalsToRemove.clear();
-        for (T animal : animalList) {
-            animal.Update();
-            if (animal.getAge() >= animal.getLifespan()) {
-                animalsToRemove.add(animal);
-                System.out.println("Animal " + animal.getName() + " has died of old age.");
-            }
-        }
-
+//        // Update animals and check for old age deaths
+//        animalsToRemove.clear();
+//        for (T animal : animalList) {
+//            animal.Update();
+//            if (animal.getAge() >= animal.getLifespan()) {
+//                animalsToRemove.add(animal);
+//                System.out.println("Animal " + animal.getName() + " has died of old age.");
+//            }
+//        }
+//
         // Remove animals that died of old age
         for (T animal : animalsToRemove) {
             safari.removeEntityAt(animal.getCurrentX(), animal.getCurrentY(), Animal.class);

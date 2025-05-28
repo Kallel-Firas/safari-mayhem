@@ -38,39 +38,48 @@ public abstract class Entity implements Serializable {
         this.visualY = y*32;
     }
 
+    public void setAnimationDuration(int duration) {
+        this.ANIMATION_DURATION_MS = duration;
+    }
+
     private Timer currentAnimation;
     private final int TILE_SIZE = 32;
-    private final double ANIMATION_SPEED = TILE_SIZE / (1000.0/32.0);
+    private int ANIMATION_DURATION_MS = 1000; // Fixed animation duration
+
     public void animateMovement(int targetX, int targetY) {
         // Stop any existing animation
         if (currentAnimation != null && currentAnimation.isRunning()) {
             currentAnimation.stop();
         }
 
-        // Create new animation timer
-        currentAnimation = new Timer(1000/32, e -> {
-            // Calculate distance to target
-            double dx = targetX*32 - visualX;
-            double dy = targetY*32 - visualY;
-            double distance = Math.sqrt(dx*dx + dy*dy);
+        // Store starting position and calculate total distance
+        final double startX = visualX;
+        final double startY = visualY;
+        final double endX = targetX * TILE_SIZE;
+        final double endY = targetY * TILE_SIZE;
 
-            if (distance > 0.1) {
-                // Normalize direction and apply speed
-                double moveX = Math.min(ANIMATION_SPEED, Math.abs(dx)) * Math.signum(dx);
-                double moveY = Math.min(ANIMATION_SPEED, Math.abs(dy)) * Math.signum(dy);
+        final long startTime = System.currentTimeMillis();
 
-                visualX += (int) moveX;
-                visualY += (int) moveY;
-            } else {
-                // Snap to exact position and stop animation
-                visualX = targetX*32;
-                visualY = targetY*32;
+        // Create new animation timer - always use 60 FPS for smooth animation
+        currentAnimation = new Timer(1000/60, e -> {
+            long elapsed = System.currentTimeMillis() - startTime;
+            double progress = Math.min(1.0, (double) elapsed / ANIMATION_DURATION_MS);
+
+            if (progress >= 1.0) {
+                // Animation complete - snap to exact position
+                visualX = (int) endX;
+                visualY = (int) endY;
                 ((Timer) e.getSource()).stop();
+            } else {
+                visualX = (int) (startX + (endX - startX) * progress);
+                visualY = (int) (startY + (endY - startY) * progress);
             }
         });
 
         currentAnimation.start();
     }
+
+
 
     public int getVisualX() {
         return visualX;

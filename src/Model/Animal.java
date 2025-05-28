@@ -236,9 +236,9 @@ public abstract class Animal extends Entity {
         thirst_meter += (int)(100 * thirst_change);
         
         // Check if animal has died from thirst or hunger
-        if (hunger_meter >= 100 || thirst_meter >= 100) {
-            alive = false;
-        }
+//        if (hunger_meter >= 100 || thirst_meter >= 100) {
+//            alive = false;
+//        }
         
         // Check if reproduction cooldown has expired
         if (!canReproduce) {

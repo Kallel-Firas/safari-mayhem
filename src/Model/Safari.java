@@ -21,12 +21,14 @@ public class Safari implements Serializable {
     private boolean lastRoadNetworkComplete = false;
     private String gameName;
     private Capital capital;
+    private String timeLabel;
 
     public List<List<Landscape>> getLandscapes() {// added this getter
         return landscapes;
     }
 
     public Safari(int difficultyLevel, int speedMode, String gameName) {
+        this.timeLabel = "Day 1, 15:00";
         this.gameName = gameName;
         this.difficultyLevel = difficultyLevel;
         this.capital = new Capital();
@@ -72,6 +74,10 @@ public class Safari implements Serializable {
         for (int i = 0; i < 50; i++) {
             int x = (int) (Math.random() * 50);
             int y = (int) (Math.random() * 50);
+            while (landscapes.get(x).get(y) instanceof Water) {
+                x = (int) (Math.random() * 50);
+                y = (int) (Math.random() * 50);
+            }
             double randomValue = Math.random();
             if (randomValue < 0.3) {
                 vegetationList.add(new Tree(x, y));
@@ -83,6 +89,31 @@ public class Safari implements Serializable {
         }
     }
 
+    public String getTimeLabel() {
+        return timeLabel;
+    }
+
+    public void updateAnimationSpeed(int duration){
+        for (Entity entity : getEntities()) {
+            entity.setAnimationDuration(duration);
+        }
+    }
+
+    public void updateTime() {
+        String[] parts = timeLabel.split("Day |,");
+        int x = Integer.parseInt(parts[1].trim());
+        int timeStart = timeLabel.indexOf(", ") + 2;
+        String time = timeLabel.substring(timeStart);  // Gets "12:30"
+        int colonPos = time.indexOf(":");
+        String hour = time.substring(0, colonPos); // Gets "12"
+        int hh = Integer.parseInt(hour);
+        hh = hh + 1;
+        if (hh > 23) {
+            hh = 0;
+            x++;
+        }
+        timeLabel = "Day " + x + ", " + hh + ":00";
+    }
 
     public List<Animal> getAnimalList() {
         List<Animal> animals = new ArrayList<>();

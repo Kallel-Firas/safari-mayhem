@@ -143,7 +143,7 @@ public class GameScreen extends JFrame {
         layeredPane.add(balanceLabel, JLayeredPane.POPUP_LAYER);
 
         // Add time display
-        timeLabel = new JLabel("Day 1, 15:00", SwingConstants.LEFT);
+        timeLabel = new JLabel(safari.getTimeLabel(), SwingConstants.LEFT);
         timeLabel.setFont(new Font("Arial", Font.BOLD, 16));
         timeLabel.setBounds(450, 50, 150, 20);
         timeLabel.setForeground(Color.WHITE);
@@ -654,6 +654,7 @@ public class GameScreen extends JFrame {
 
     public void run() {
         timer1 = new Timer(speedIntervals[currentSpeedIndex], e -> {
+            safari.updateAnimationSpeed(speedIntervals[currentSpeedIndex]);
             safari.Update();
             gameMap.update(safari.getLandscapes(), safari.getEntities());
             miniMap.update(safari.getLandscapes(), safari.getAnimalList());
@@ -670,14 +671,7 @@ public class GameScreen extends JFrame {
     }
 
     private void updateTime() {
-        String currentTime = timeLabel.getText();
-        String[] parts = currentTime.split(", ");
-        String[] dayPart = parts[0].split(" ");
-        String[] timePart = parts[1].split(":");
-
-        int day = Integer.parseInt(dayPart[1]);
-        int hour = Integer.parseInt(timePart[0]);
-        timeLabel.setText(String.format("Day %d, %02d:00", day, hour));
+        timeLabel.setText(safari.getTimeLabel());
     }
 
     @Override
@@ -753,8 +747,8 @@ public class GameScreen extends JFrame {
         for (Jeep jeep : safari.getJeeps()) {
             jeep.update(safari);
         }
-
-        timeLabel.setText(String.format("Day %d, %02d:00", day, hour));
+        safari.updateTime();
+        updateTime();
     }
 
 
