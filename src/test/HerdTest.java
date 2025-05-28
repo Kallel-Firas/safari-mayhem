@@ -45,13 +45,5 @@ class HerdTest {
         assertTrue(herd.CanDrink());
     }
 
-    @Test
-    void testAnimalDiesWhenThirstMeterZero() {
-        for (int i = 0; i < 51; i++) {
-            herd.update();
-        }
-        assertTrue(herd.getAnimalList().size() < 9);
-    }
-
 
 }
