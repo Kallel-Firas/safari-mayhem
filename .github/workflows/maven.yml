@@ -35,7 +35,6 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'maven'
 
       - name: Compile with Maven
         run: mvn compile ${{ env.MAVEN_CLI_OPTS }}
@@ -52,7 +51,6 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'maven'
 
       - name: Run tests with Maven
         run: mvn test ${{ env.MAVEN_CLI_OPTS }}
@@ -69,7 +67,6 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'maven'
 
       - name: Build and install with Maven
         run: mvn install ${{ env.MAVEN_CLI_OPTS }}
